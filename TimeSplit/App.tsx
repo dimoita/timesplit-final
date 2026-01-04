@@ -509,8 +509,6 @@ export default function App() {
             <FAQ />
             <Footer />
             <StickyCTA onStartQuiz={() => setShowQuiz(true)} />
-            <InstallPrompt />
-            <InstallMission />
             <OnboardingQuiz isOpen={showQuiz} onClose={() => setShowQuiz(false)} onComplete={handleCreateProfile} />
             <CheckoutBridge isOpen={showCheckout} onClose={() => setShowCheckout(false)} price={37} />
           </>
@@ -581,3 +579,4 @@ export default function App() {
     </>
   );
 }
+
