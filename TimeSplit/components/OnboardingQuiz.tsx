@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ChevronRight, Brain, Calculator, Frown, Zap, Trophy, Heart, ArrowRight, CheckCircle2, Clock, Loader2 } from 'lucide-react';
+import { X, ArrowRight, CheckCircle2, Play, AlertCircle } from 'lucide-react';
 
 interface OnboardingQuizProps {
   isOpen: boolean;
@@ -8,49 +8,50 @@ interface OnboardingQuizProps {
 }
 
 export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose, onComplete }) => {
-  const [step, setStep] = useState(0); // 0: Name, 1: Pain, 2: Goal, 3: Commitment, 4: Analyzing, 5: Result
+  const [step, setStep] = useState(0); 
   const [name, setName] = useState('');
   const [painPoint, setPainPoint] = useState('');
   const [goal, setGoal] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // --- SISTEMA DE SOM (Pop Suave) ---
-  const playSound = (type: 'POP' | 'VICTORY') => {
-    try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+  // --- IMAGENS PARA CADA ETAPA (Storytelling Visual) ---
+  const stepImages = [
+    "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop", // 0: Espaço/Foguete
+    "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop", // 1: Criança Estudando (Dor)
+    "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=1000&auto=format&fit=crop", // 2: Criança Feliz (Sonho)
+    "https://images.unsplash.com/photo-1501139083538-0139583c61df?q=80&w=1000&auto=format&fit=crop", // 3: Relógio (Tempo)
+    "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop", // 4: Cérebro Digital (Analise)
+    "https://images.unsplash.com/photo-1578269174936-2709b6aeb913?q=80&w=1000&auto=format&fit=crop"  // 5: Confetes/Ouro (Sucesso)
+  ];
 
-      if (type === 'POP') {
-        osc.frequency.setValueAtTime(600, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
+  // --- SOM DE ARCADE ---
+  const playSound = (type: 'POP' | 'VICTORY') => {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    if (type === 'POP') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
         gain.gain.setValueAtTime(0.1, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.1);
-      } else {
-        // Victory Chord
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.1);
+    } else {
         const now = ctx.currentTime;
         [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-            const oscV = ctx.createOscillator();
-            const gainV = ctx.createGain();
-            oscV.type = 'sine';
-            oscV.frequency.value = freq;
-            gainV.gain.setValueAtTime(0, now + i*0.1);
-            gainV.gain.linearRampToValueAtTime(0.1, now + i*0.1 + 0.05);
-            gainV.gain.exponentialRampToValueAtTime(0.001, now + i*0.1 + 0.5);
-            oscV.connect(gainV);
-            gainV.connect(ctx.destination);
-            oscV.start(now + i*0.1);
-            oscV.stop(now + i*0.1 + 0.6);
+            const oscV = ctx.createOscillator(); const gainV = ctx.createGain();
+            oscV.type = 'square'; oscV.frequency.value = freq;
+            gainV.gain.setValueAtTime(0.05, now + i*0.1);
+            gainV.gain.exponentialRampToValueAtTime(0.001, now + i*0.1 + 0.1);
+            oscV.connect(gainV); gainV.connect(ctx.destination);
+            oscV.start(now + i*0.1); oscV.stop(now + i*0.1 + 0.1);
         });
-      }
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-    } catch (e) {}
+    }
   };
 
   // --- CONFETES ---
@@ -67,8 +68,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
         particles.push({
             x: canvas.width / 2, y: canvas.height / 2,
             vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20 - 5,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            size: Math.random() * 8 + 4, life: 100
+            color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 8 + 4, life: 100
         });
     }
     const animate = () => {
@@ -86,32 +86,23 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
     animate();
   };
 
-  // --- LÓGICA DE TRANSIÇÃO ---
   const handleNext = () => {
     playSound('POP');
-    if (step === 3) {
-        // Entra no modo "Analisando" antes de mostrar o resultado
-        setStep(4); 
-    } else {
-        setStep(step + 1);
-    }
+    if (step === 3) { setStep(4); } else { setStep(step + 1); }
   };
 
-  // Efeito de "Analisando..."
   useEffect(() => {
       if (step === 4) {
           setIsAnalyzing(true);
-          // Simula 3 segundos de processamento
           setTimeout(() => {
               setIsAnalyzing(false);
-              setStep(5); // Vai para o resultado final
+              setStep(5);
               playSound('VICTORY');
               fireConfetti();
           }, 2500);
       }
   }, [step]);
 
-  // Fecha o quiz e manda dados para o App abrir o Checkout
   const handleFinalAction = () => {
       playSound('POP');
       onComplete({ name, painPoint, goal });
@@ -120,201 +111,183 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
   if (!isOpen) return null;
 
   return (
-    // Z-INDEX 100 GARANTE QUE CUBRA TUDO
-    <div className="fixed inset-0 z-[100] bg-white font-nunito animate-in fade-in duration-300 flex flex-col">
+    // LAYOUT PRINCIPAL: TELA CHEIA E Z-INDEX MÁXIMO
+    <div className="fixed inset-0 z-[100] bg-white font-nunito animate-in fade-in duration-300 flex flex-col md:flex-row h-[100dvh] w-screen overflow-hidden">
       
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-[110]" />
 
-      {/* HEADER: PROGRESS BAR & CLOSE */}
-      <div className="px-6 pt-6 pb-2 flex items-center justify-between shrink-0 bg-white z-20">
-        {step < 5 && (
-            <div className="flex gap-1.5 w-full max-w-[200px]">
-                {[0, 1, 2, 3, 4].map(i => (
-                    <div key={i} className={`h-1.5 rounded-full transition-all duration-500 flex-1 ${i <= step ? 'bg-[#4F46E5]' : 'bg-gray-100'}`} />
-                ))}
-            </div>
-        )}
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-900 p-2 ml-auto">
-            <X size={24} />
+      {/* --- ÁREA DA IMAGEM (Topo no Mobile, Esquerda no Desktop) --- */}
+      <div className="relative w-full h-[30%] md:h-full md:w-1/2 bg-slate-900 overflow-hidden shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+        <img 
+            src={stepImages[step]} 
+            alt="Quiz Illustration" 
+            className="w-full h-full object-cover transition-all duration-700 transform scale-105 opacity-90"
+        />
+        
+        {/* Botão Fechar (Fica sobre a imagem no mobile para economizar espaço) */}
+        <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm transition-colors">
+            <X size={20} />
         </button>
+
+        {/* Barra de Progresso (Sobre a imagem no mobile) */}
+        <div className="absolute bottom-0 left-0 w-full p-4 z-20 flex gap-1">
+             {[0, 1, 2, 3, 4, 5].map(i => (
+                <div key={i} className={`h-1 rounded-full transition-all duration-500 flex-1 ${i <= step ? 'bg-[#10B981] shadow-[0_0_10px_#10B981]' : 'bg-white/20'}`} />
+            ))}
+        </div>
       </div>
 
-      {/* BODY: CONVERSATIONAL CONTENT */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col justify-center max-w-lg mx-auto w-full">
+      {/* --- ÁREA DE CONTEÚDO (Baixo no Mobile, Direita no Desktop) --- */}
+      <div className="flex-1 flex flex-col relative bg-white">
         
-        {/* --- STEP 0: NOME (IDENTIDADE) --- */}
-        {step === 0 && (
-            <div className="animate-in slide-in-from-right duration-500">
-                <span className="text-[#4F46E5] font-black tracking-widest uppercase text-xs mb-2 block">Step 1: Identity</span>
-                <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-6 leading-tight">
-                    Let's unlock your child's potential. <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F46E5] to-purple-600">What is their name?</span>
-                </h2>
-                <input 
-                    type="text" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full text-3xl font-bold border-b-4 border-gray-200 focus:border-[#4F46E5] outline-none py-4 bg-transparent placeholder-gray-300 transition-colors text-slate-800"
-                    placeholder="Type name here..."
-                    autoFocus
-                />
-            </div>
-        )}
-
-        {/* --- STEP 1: A DOR (AGITAÇÃO) --- */}
-        {step === 1 && (
-            <div className="animate-in slide-in-from-right duration-500">
-                <span className="text-orange-500 font-black tracking-widest uppercase text-xs mb-2 block">Step 2: Diagnosis</span>
-                <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">What holds {name} back the most?</h2>
-                <p className="text-gray-500 mb-8 font-medium">Be honest. We need to know where to start.</p>
-                
-                <div className="space-y-3">
-                    {[
-                        { id: 'fingers', label: 'Still counts on fingers', icon: '🖐️' },
-                        { id: 'anxiety', label: 'Gets anxious / Cries', icon: '😢' },
-                        { id: 'slow', label: 'Too slow / Loses focus', icon: '🐢' },
-                        { id: 'boring', label: 'Thinks math is boring', icon: '😴' }
-                    ].map((opt) => (
-                        <button
-                            key={opt.id}
-                            onClick={() => { setPainPoint(opt.id); handleNext(); }}
-                            className={`w-full p-5 rounded-2xl border-2 flex items-center gap-4 transition-all text-left transform active:scale-95
-                                ${painPoint === opt.id 
-                                    ? 'border-[#4F46E5] bg-indigo-50 shadow-md ring-2 ring-indigo-100' 
-                                    : 'border-gray-100 bg-white hover:border-gray-300 hover:bg-gray-50'}
-                            `}
-                        >
-                            <span className="text-2xl">{opt.icon}</span>
-                            <span className={`text-lg font-bold ${painPoint === opt.id ? 'text-[#4F46E5]' : 'text-slate-700'}`}>{opt.label}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-        )}
-
-        {/* --- STEP 2: O SONHO (FUTURO) --- */}
-        {step === 2 && (
-            <div className="animate-in slide-in-from-right duration-500">
-                <span className="text-purple-500 font-black tracking-widest uppercase text-xs mb-2 block">Step 3: The Goal</span>
-                <h2 className="text-3xl font-black text-slate-900 mb-8 leading-tight">Imagine {name} in 30 days... What is the biggest win?</h2>
-                
-                <div className="space-y-3">
-                    {[
-                        { id: 'speed', label: 'Instant Mental Math', icon: '⚡' },
-                        { id: 'confidence', label: 'Confidence in Class', icon: '🏆' },
-                        { id: 'love', label: 'Loving to Learn', icon: '❤️' }
-                    ].map((opt) => (
-                        <button
-                            key={opt.id}
-                            onClick={() => { setGoal(opt.id); handleNext(); }}
-                            className={`w-full p-5 rounded-2xl border-2 flex items-center gap-4 transition-all text-left transform active:scale-95
-                                ${goal === opt.id 
-                                    ? 'border-[#4F46E5] bg-indigo-50 shadow-md ring-2 ring-indigo-100' 
-                                    : 'border-gray-100 bg-white hover:border-gray-300 hover:bg-gray-50'}
-                            `}
-                        >
-                            <span className="text-2xl">{opt.icon}</span>
-                            <span className={`text-lg font-bold ${goal === opt.id ? 'text-[#4F46E5]' : 'text-slate-700'}`}>{opt.label}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-        )}
-
-        {/* --- STEP 3: O COMPROMISSO (A PEGADINHA DO BEM) --- */}
-        {step === 3 && (
-            <div className="animate-in slide-in-from-right duration-500">
-                <span className="text-red-500 font-black tracking-widest uppercase text-xs mb-2 block">Step 4: Commitment</span>
-                <h2 className="text-3xl font-black text-slate-900 mb-4 leading-tight">Final Check.</h2>
-                
-                <div className="bg-orange-50 border-l-4 border-orange-400 p-6 rounded-r-xl mb-8">
-                    <p className="text-slate-700 font-medium text-lg leading-relaxed">
-                        The Timesplit Method is fast, but it requires consistency. <br/><br/>
-                        <strong>Are you and {name} willing to train 15 minutes a day?</strong>
-                    </p>
-                </div>
-
-                <button 
-                    onClick={handleNext}
-                    className="w-full h-20 bg-[#4F46E5] hover:bg-[#4338ca] text-white rounded-2xl font-black text-xl shadow-xl flex items-center justify-center gap-3 transform active:scale-95 transition-all"
-                >
-                    <CheckCircle2 size={28} />
-                    YES, WE ACCEPT THE CHALLENGE
-                </button>
-                <p className="text-center text-gray-400 text-xs mt-4 font-bold">This commitment is essential for results.</p>
-            </div>
-        )}
-
-        {/* --- STEP 4: ANALISANDO (A ESPERA MÁGICA) --- */}
-        {step === 4 && (
-            <div className="text-center animate-in zoom-in duration-500 flex flex-col items-center">
-                <div className="w-24 h-24 relative mb-8">
-                    <div className="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-[#4F46E5] rounded-full border-t-transparent animate-spin"></div>
-                    <Brain className="absolute inset-0 m-auto text-[#4F46E5]" size={32} />
-                </div>
-                <h2 className="text-2xl font-black text-slate-900 mb-2">Analyzing Profile...</h2>
-                <div className="space-y-2 text-sm font-bold text-gray-400">
-                    <p className="animate-pulse">Building personalized path for {name}...</p>
-                    <p className="animate-pulse delay-75">Selecting best modules...</p>
-                    <p className="animate-pulse delay-150">Calculating success rate...</p>
-                </div>
-            </div>
-        )}
-
-        {/* --- STEP 5: O RESULTADO (A VENDA) --- */}
-        {step === 5 && (
-            <div className="animate-in slide-in-from-bottom duration-500 flex flex-col h-full">
-                <div className="flex-1 flex flex-col justify-center">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600 shadow-lg mx-auto">
-                        <Trophy size={40} strokeWidth={2.5} />
-                    </div>
-                    
-                    <h2 className="text-3xl font-black text-slate-900 mb-4 leading-tight text-center">
-                        Great News! <br/> We can help {name}.
+        <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col justify-center max-w-lg mx-auto w-full">
+            
+            {/* STEP 0: NOME */}
+            {step === 0 && (
+                <div className="animate-in slide-in-from-right duration-500">
+                    <span className="text-[#4F46E5] font-bold tracking-widest uppercase text-xs mb-2 block">Start Mission</span>
+                    <h2 className="text-3xl font-black text-slate-900 mb-4 leading-tight">
+                        Vamos destravar o potencial matemático do seu filho?
                     </h2>
+                    <p className="text-gray-500 mb-6 text-sm">Para começar, como ele(a) se chama?</p>
                     
-                    <div className="bg-indigo-50 border-2 border-indigo-100 rounded-2xl p-6 mb-6 relative">
-                        <div className="absolute -top-3 left-6 bg-[#4F46E5] text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider">
-                            Analysis Result
-                        </div>
-                        <p className="text-slate-700 font-medium leading-relaxed text-lg">
-                            {name} isn't "bad at math". The traditional method is just boring. <br/><br/>
-                            Based on your answers, our <strong>Gamified Protocol</strong> is the perfect fit to fix the focus issue and reach <strong>Mental Math Mastery</strong> in 21 days.
+                    <input 
+                        type="text" 
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full text-2xl font-bold border-b-2 border-gray-200 focus:border-[#10B981] outline-none py-3 bg-transparent placeholder-gray-300 text-slate-800 transition-colors"
+                        placeholder="Digite o nome aqui..."
+                        autoFocus
+                    />
+                    
+                    {name && (
+                        <button onClick={handleNext} className="w-full mt-8 h-14 bg-[#10B981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-xl flex items-center justify-center gap-2 animate-in slide-in-from-bottom duration-300">
+                            COMEÇAR <Play size={20} fill="currentColor" />
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {/* STEP 1: A DOR */}
+            {step === 1 && (
+                <div className="animate-in slide-in-from-right duration-500">
+                    <h2 className="text-2xl font-black text-slate-900 mb-4 leading-tight">O que mais te preocupa hoje?</h2>
+                    
+                    <div className="space-y-3">
+                        {[
+                            { id: 'fingers', label: 'Ainda conta nos dedos', icon: '🖐️' },
+                            { id: 'anxiety', label: 'Trava ou fica nervoso(a)', icon: '😓' },
+                            { id: 'slow', label: 'Demora muito na tarefa', icon: '🐢' },
+                            { id: 'boring', label: 'Acha matemática chata', icon: '🥱' }
+                        ].map((opt) => (
+                            <button
+                                key={opt.id}
+                                onClick={() => { playSound('POP'); setPainPoint(opt.id); handleNext(); }}
+                                className="w-full p-4 rounded-xl border-2 border-gray-100 bg-white hover:border-[#10B981] hover:bg-green-50/50 shadow-sm flex items-center gap-4 transition-all transform active:scale-[0.98] text-left"
+                            >
+                                <span className="text-2xl">{opt.icon}</span>
+                                <span className="text-base font-bold text-slate-700">{opt.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* STEP 2: O SONHO */}
+            {step === 2 && (
+                <div className="animate-in slide-in-from-right duration-500">
+                    <h2 className="text-2xl font-black text-slate-900 mb-4 leading-tight">Qual seria a maior vitória para o {name}?</h2>
+                    
+                    <div className="space-y-3">
+                        {[
+                            { id: 'speed', label: 'Fazer contas de cabeça', icon: '⚡' },
+                            { id: 'confidence', label: 'Confiança na escola', icon: '🏆' },
+                            { id: 'grades', label: 'Notas melhores', icon: '📈' },
+                            { id: 'love', label: 'Gostar de estudar', icon: '❤️' }
+                        ].map((opt) => (
+                            <button
+                                key={opt.id}
+                                onClick={() => { playSound('POP'); setGoal(opt.id); handleNext(); }}
+                                className="w-full p-4 rounded-xl border-2 border-gray-100 bg-white hover:border-[#10B981] hover:bg-green-50/50 shadow-sm flex items-center gap-4 transition-all transform active:scale-[0.98] text-left"
+                            >
+                                <span className="text-2xl">{opt.icon}</span>
+                                <span className="text-base font-bold text-slate-700">{opt.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* STEP 3: COMPROMISSO */}
+            {step === 3 && (
+                <div className="animate-in slide-in-from-right duration-500">
+                    <h2 className="text-2xl font-black text-slate-900 mb-4">Um acordo entre nós.</h2>
+                    
+                    <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-xl mb-6">
+                        <p className="text-slate-800 font-medium text-sm leading-relaxed">
+                            O método funciona, mas exige constância. <br/>
+                            <strong>Você topa treinar 15 minutos por dia com o {name}?</strong>
                         </p>
                     </div>
-                </div>
 
-                <div className="mt-auto">
                     <button 
-                        onClick={handleFinalAction}
-                        className="w-full h-20 bg-[#10B981] hover:bg-[#059669] text-white rounded-2xl font-black text-xl shadow-xl flex items-center justify-center gap-3 animate-pulse"
+                        onClick={handleNext}
+                        className="w-full h-16 bg-[#10B981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-xl flex items-center justify-center gap-2 transform active:scale-[0.98] transition-all"
                     >
-                        SEE PERSONALIZED PLAN <ArrowRight size={28} />
+                        <CheckCircle2 size={24} />
+                        SIM, ACEITAMOS
                     </button>
-                    <p className="text-center text-gray-400 text-xs mt-4 font-bold uppercase tracking-wider">
-                        100% Risk Free • Parent Approved
-                    </p>
+                    <p className="text-center text-gray-400 text-[10px] mt-3 font-bold uppercase">Sem compromisso financeiro agora</p>
                 </div>
-            </div>
-        )}
+            )}
 
-      </div>
+            {/* STEP 4: ANALISANDO */}
+            {step === 4 && (
+                <div className="text-center animate-in zoom-in duration-500 flex flex-col items-center justify-center h-full">
+                    <div className="w-20 h-20 relative mb-6">
+                        <div className="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
+                        <div className="absolute inset-0 border-4 border-[#10B981] rounded-full border-t-transparent animate-spin"></div>
+                    </div>
+                    <h2 className="text-xl font-black text-slate-900 mb-2">Processando Perfil...</h2>
+                    <div className="space-y-1 text-sm font-bold text-gray-400">
+                        <p className="animate-pulse">Criando plano para o {name}...</p>
+                        <p className="animate-pulse delay-75">Selecionando jogos...</p>
+                    </div>
+                </div>
+            )}
 
-      {/* FIXED FOOTER BUTTON (Só aparece no Step 0 para confirmar nome) */}
-      {step === 0 && (
-        <div className="fixed bottom-0 left-0 w-full p-4 bg-white/80 backdrop-blur-md border-t border-gray-100 z-30">
-            <div className="max-w-lg mx-auto">
-                <button 
-                    onClick={handleNext}
-                    disabled={!name}
-                    className="w-full h-14 bg-[#4F46E5] hover:bg-[#4338ca] disabled:opacity-50 text-white rounded-xl font-black uppercase tracking-wide shadow-lg transition-all"
-                >
-                    Start Mission
-                </button>
-            </div>
+            {/* STEP 5: RESULTADO */}
+            {step === 5 && (
+                <div className="animate-in slide-in-from-bottom duration-500 flex flex-col h-full">
+                    <div className="flex-1 flex flex-col justify-center">
+                        <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider w-fit mb-4">
+                            <CheckCircle2 size={14} /> Diagnóstico Pronto
+                        </div>
+                        
+                        <h2 className="text-3xl font-black text-slate-900 mb-4 leading-tight">
+                            Boas Notícias! <br/> Temos a solução.
+                        </h2>
+                        
+                        <p className="text-slate-600 font-medium leading-relaxed text-base mb-6">
+                            O {name} <strong>não</strong> tem problema com números. O método tradicional que é chato. <br/><br/>
+                            Nosso protocolo foi desenhado para resolver exatamente isso em <strong>15 minutos por dia</strong>.
+                        </p>
+                    </div>
+
+                    <div className="mt-auto pt-4 bg-white sticky bottom-0">
+                        <button 
+                            onClick={handleFinalAction}
+                            className="w-full h-16 bg-[#10B981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-xl flex items-center justify-center gap-2 animate-pulse"
+                        >
+                            VER PLANO DE RESGATE <ArrowRight size={24} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
         </div>
-      )}
-
+      </div>
     </div>
   );
 };
