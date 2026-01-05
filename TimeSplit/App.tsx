@@ -170,10 +170,14 @@ export default function App() {
   const [activeEvent, setActiveEvent] = useState<ChronoEvent | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
+  // Modals & Flows
   const [showQuiz, setShowQuiz] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showAlgebraModal, setShowAlgebraModal] = useState(false); 
   const [checkoutBump, setCheckoutBump] = useState<'KIT' | 'INSURANCE' | null>(null); 
+  
+  // NEW STATE: Temp name from Quiz to pass to Checkout
+  const [tempChildName, setTempChildName] = useState<string>('');
   
   const [showSuccessOverlay, setShowSuccessOverlay] = useState<{coins: number, items: string[]} | null>(null);
   const [showSeasonCeremony, setShowSeasonCeremony] = useState(false);
@@ -357,23 +361,26 @@ export default function App() {
       setView('DASHBOARD');
   };
 
+  // ESTA FUNÇÃO FOI SUBSTITUÍDA PELO FLUXO DE VENDAS
+  // Mas mantemos ela aqui caso precisemos criar conta manualmente depois
   const handleCreateProfile = (data: { name: string, villain: string, avatar: string }) => {
-      const newProfile: Profile = {
-          id: Date.now().toString(),
-          name: data.name,
-          avatar: data.avatar,
-          villain: data.villain,
-          progress: {
-              unlockedLevel: 1, totalStars: 0, coins: 0, mastery: {}, consumables: {}, upgrades: {}, inventory: ['rocket', 'trail_default', 'theme_default'], equippedItems: { avatar: 'rocket', trail: 'trail_default', theme: 'theme_default' }, bounties: [], chronicles: [], pet: DEFAULT_PET, hq: DEFAULT_HQ, unlockedArtifacts: [], equippedArtifact: null, lastDailyBriefing: null, referralCode: generateReferralCode(), redeemedCode: false, recruitsCount: 0, realWorldInventory: [], dailyLevelCount: 0, lastPlayedDate: new Date().toISOString().split('T')[0]
-          }
-      };
-      const updated = [...profiles, newProfile];
-      setProfiles(updated);
-      persistData(updated);
-      setCurrentProfileId(newProfile.id);
-      setView('DASHBOARD');
+      // Legacy code - kept for reference or direct creation
+  };
+
+  // --- NOVO FLUXO: QUIZ -> CHECKOUT (A CONVERSÃO) ---
+  const handleQuizComplete = (data: { name: string; painPoint: string; goal: string }) => {
+      // 1. Guarda o nome para personalizar o checkout
+      setTempChildName(data.name);
+      
+      // 2. Salva os dados no navegador (Lead) caso ele feche a aba
+      localStorage.setItem('ts_lead_data', JSON.stringify(data));
+
+      // 3. Fecha o Quiz e Abre o CheckoutBridge
       setShowQuiz(false);
-      addToast(`Perfil de ${data.name} criado!`, "SUCCESS");
+      setTimeout(() => {
+          setCheckoutBump(null);
+          setShowCheckout(true);
+      }, 300);
   };
 
   const updateCurrentProfile = (updater: (p: Profile) => Profile, showSaveToast = false) => {
@@ -481,7 +488,6 @@ export default function App() {
   const getCurrentProfile = () => profiles.find(p => p.id === currentProfileId);
 
   // --- RENDER ---
-  // TRAVA DE SEGURANÇA: SE FOR LOGIN, SÓ RENDERIZA LOGIN.
   if (view === 'LOGIN') {
       return (
           <LoginPage 
@@ -491,7 +497,6 @@ export default function App() {
       );
   }
 
-  // Se não for Login, renderiza o resto (Landing Page etc)
   if (view === 'LANDING') {
       return (
           <>
@@ -509,13 +514,25 @@ export default function App() {
             <FAQ />
             <Footer />
             <StickyCTA onStartQuiz={() => setShowQuiz(true)} />
-            <OnboardingQuiz isOpen={showQuiz} onClose={() => setShowQuiz(false)} onComplete={handleCreateProfile} />
-            <CheckoutBridge isOpen={showCheckout} onClose={() => setShowCheckout(false)} price={37} />
+            
+            {/* AGORA O QUIZ CHAMA A FUNÇÃO DE CHECKOUT, NÃO DE CRIAR PERFIL */}
+            <OnboardingQuiz 
+                isOpen={showQuiz} 
+                onClose={() => setShowQuiz(false)} 
+                onComplete={handleQuizComplete} 
+            />
+            
+            <CheckoutBridge 
+                isOpen={showCheckout} 
+                onClose={() => setShowCheckout(false)} 
+                price={37} 
+                // AQUI ELE PEGA O NOME DO FILHO QUE VEIO DO QUIZ
+                childName={activeProfile?.name || tempChildName} 
+            />
           </>
       );
   }
 
-  // RESTO DO CÓDIGO (Views protegidas)
   if (view === 'PROFILES') {
       return <ProfileSelector profiles={profiles} onSelect={handleProfileSelect} onAddNew={() => setShowQuiz(true)} isPremium={isPremium} isFamilyPlan={isFamilyPlan} />;
   }
@@ -575,8 +592,7 @@ export default function App() {
         {view === 'PRINT' && <PrintableHQ unlockedLevel={activeProfile.progress.unlockedLevel} onBack={() => setView('DASHBOARD')} childName={activeProfile.name} hasOfflineKit={hasOfflineKit} onUnlock={() => { setCheckoutBump('KIT'); setShowCheckout(true); }} />}
         {view === 'LOGIC_ARENA' && <LogicArena onExit={() => setView('DASHBOARD')} onComplete={(score) => { updateCurrentProfile(p => ({...p, progress: {...p.progress, coins: p.progress.coins + score}})); setView('DASHBOARD'); }} />}
         {showDailyReward && <DailyRewardModal onClaim={(c, i) => { updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins + c, consumables: { ...p.progress.consumables, [i]: (p.progress.consumables[i] || 0) + 1 } } }), true); setShowDailyReward(false); }} />}
-        <CheckoutBridge isOpen={showCheckout} onClose={() => setShowCheckout(false)} price={37} childName={activeProfile?.name} initialBump={checkoutBump} />
+        <CheckoutBridge isOpen={showCheckout} onClose={() => setShowCheckout(false)} price={37} childName={activeProfile?.name || tempChildName} initialBump={checkoutBump} />
     </>
   );
 }
-
