@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ArrowRight, CheckCircle2, Play, AlertCircle } from 'lucide-react';
+import { X, ArrowRight, CheckCircle2, Play, Sparkles, AlertCircle } from 'lucide-react';
 
 interface OnboardingQuizProps {
   isOpen: boolean;
@@ -15,41 +15,50 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // --- IMAGENS PARA CADA ETAPA (Storytelling Visual) ---
+  // --- IMAGENS EMOCIONAIS (NEURÔNIOS ESPELHO) ---
   const stepImages = [
-    "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1000&auto=format&fit=crop", // 0: Espaço/Foguete
-    "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop", // 1: Criança Estudando (Dor)
-    "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=1000&auto=format&fit=crop", // 2: Criança Feliz (Sonho)
-    "https://images.unsplash.com/photo-1501139083538-0139583c61df?q=80&w=1000&auto=format&fit=crop", // 3: Relógio (Tempo)
-    "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop", // 4: Cérebro Digital (Analise)
-    "https://images.unsplash.com/photo-1578269174936-2709b6aeb913?q=80&w=1000&auto=format&fit=crop"  // 5: Confetes/Ouro (Sucesso)
+    "https://images.unsplash.com/photo-1545558728-e5542d5e850f?q=80&w=1000&auto=format&fit=crop", // 0: Criança Astronauta/Sonhadora (Identidade)
+    "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop", // 1: Criança Pensativa/Estudando (Dor)
+    "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1000&auto=format&fit=crop", // 2: Criança Feliz na Escola (Sonho)
+    "https://images.unsplash.com/photo-1606092195730-5d7b9af1ef4d?q=80&w=1000&auto=format&fit=crop", // 3: Pai e Filho High-Five (Compromisso/Parceria)
+    "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1000&auto=format&fit=crop", // 4: Tecnologia/Cérebro (Análise)
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=1000&auto=format&fit=crop"  // 5: Confetes/Vitória (Sucesso)
   ];
 
-  // --- SOM DE ARCADE ---
+  // --- SOM TURBINADO (Volume 0.5) ---
   const playSound = (type: 'POP' | 'VICTORY') => {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
+    
     const ctx = new AudioContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
     if (type === 'POP') {
+        // Som de "Pop" mais encorpado e alto
         osc.type = 'sine';
         osc.frequency.setValueAtTime(400, ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(); osc.stop(ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.5, ctx.currentTime); // Volume aumentado
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
     } else {
+        // Som de Vitória Épico
         const now = ctx.currentTime;
         [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-            const oscV = ctx.createOscillator(); const gainV = ctx.createGain();
-            oscV.type = 'square'; oscV.frequency.value = freq;
-            gainV.gain.setValueAtTime(0.05, now + i*0.1);
-            gainV.gain.exponentialRampToValueAtTime(0.001, now + i*0.1 + 0.1);
-            oscV.connect(gainV); gainV.connect(ctx.destination);
-            oscV.start(now + i*0.1); oscV.stop(now + i*0.1 + 0.1);
+            const oscV = ctx.createOscillator();
+            const gainV = ctx.createGain();
+            oscV.type = 'triangle'; // Timbre mais brilhante
+            oscV.frequency.value = freq;
+            gainV.gain.setValueAtTime(0.3, now + i*0.1);
+            gainV.gain.exponentialRampToValueAtTime(0.001, now + i*0.1 + 0.4);
+            oscV.connect(gainV);
+            gainV.connect(ctx.destination);
+            oscV.start(now + i*0.1);
+            oscV.stop(now + i*0.1 + 0.5);
         });
     }
   };
@@ -68,7 +77,8 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
         particles.push({
             x: canvas.width / 2, y: canvas.height / 2,
             vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 0.5) * 20 - 5,
-            color: colors[Math.floor(Math.random() * colors.length)], size: Math.random() * 8 + 4, life: 100
+            color: colors[Math.floor(Math.random() * colors.length)],
+            size: Math.random() * 8 + 4, life: 100
         });
     }
     const animate = () => {
@@ -88,7 +98,11 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
 
   const handleNext = () => {
     playSound('POP');
-    if (step === 3) { setStep(4); } else { setStep(step + 1); }
+    if (step === 3) {
+        setStep(4); 
+    } else {
+        setStep(step + 1);
+    }
   };
 
   useEffect(() => {
@@ -111,65 +125,69 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
   if (!isOpen) return null;
 
   return (
-    // LAYOUT PRINCIPAL: TELA CHEIA E Z-INDEX MÁXIMO
+    // LAYOUT 100% MOBILE FRIENDLY (h-dvh)
     <div className="fixed inset-0 z-[100] bg-white font-nunito animate-in fade-in duration-300 flex flex-col md:flex-row h-[100dvh] w-screen overflow-hidden">
       
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-[110]" />
 
-      {/* --- ÁREA DA IMAGEM (Topo no Mobile, Esquerda no Desktop) --- */}
-      <div className="relative w-full h-[30%] md:h-full md:w-1/2 bg-slate-900 overflow-hidden shrink-0">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+      {/* --- ÁREA DA IMAGEM HERO (Topo no Mobile) --- */}
+      <div className="relative w-full h-[35%] md:h-full md:w-1/2 bg-slate-900 overflow-hidden shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-white z-10"></div>
         <img 
             src={stepImages[step]} 
-            alt="Quiz Illustration" 
+            alt="Step Illustration" 
             className="w-full h-full object-cover transition-all duration-700 transform scale-105 opacity-90"
         />
         
-        {/* Botão Fechar (Fica sobre a imagem no mobile para economizar espaço) */}
-        <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm transition-colors">
-            <X size={20} />
-        </button>
-
-        {/* Barra de Progresso (Sobre a imagem no mobile) */}
-        <div className="absolute bottom-0 left-0 w-full p-4 z-20 flex gap-1">
+        {/* Barra de Progresso (Visível sobre a imagem) */}
+        <div className="absolute top-4 left-0 w-full px-6 z-20 flex gap-1">
              {[0, 1, 2, 3, 4, 5].map(i => (
-                <div key={i} className={`h-1 rounded-full transition-all duration-500 flex-1 ${i <= step ? 'bg-[#10B981] shadow-[0_0_10px_#10B981]' : 'bg-white/20'}`} />
+                <div key={i} className={`h-1.5 rounded-full transition-all duration-500 flex-1 shadow-sm ${i <= step ? 'bg-[#10B981]' : 'bg-white/40 backdrop-blur-sm'}`} />
             ))}
         </div>
+
+        {/* Botão Fechar */}
+        <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-black/20 hover:bg-black/40 text-white p-2 rounded-full backdrop-blur-md transition-colors">
+            <X size={20} />
+        </button>
       </div>
 
-      {/* --- ÁREA DE CONTEÚDO (Baixo no Mobile, Direita no Desktop) --- */}
-      <div className="flex-1 flex flex-col relative bg-white">
+      {/* --- ÁREA DE CONTEÚDO (Baixo no Mobile) --- */}
+      <div className="flex-1 flex flex-col relative bg-white -mt-6 rounded-t-3xl md:mt-0 md:rounded-none z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
         
-        <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col justify-center max-w-lg mx-auto w-full">
+        <div className="flex-1 overflow-y-auto px-6 pt-8 pb-4 flex flex-col justify-start md:justify-center max-w-lg mx-auto w-full">
             
-            {/* STEP 0: NOME */}
+            {/* STEP 0: NOME DO CAMPEÃO */}
             {step === 0 && (
                 <div className="animate-in slide-in-from-right duration-500">
-                    <span className="text-[#4F46E5] font-bold tracking-widest uppercase text-xs mb-2 block">Start Mission</span>
-                    <h2 className="text-3xl font-black text-slate-900 mb-4 leading-tight">
-                        Vamos destravar o potencial matemático do seu filho?
+                    <span className="text-[#4F46E5] font-black tracking-widest uppercase text-xs mb-2 block flex items-center gap-1">
+                        <Sparkles size={12} /> Perfil do Herói
+                    </span>
+                    <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
+                        Quem é o nosso futuro <span className="text-[#4F46E5]">Campeão?</span>
                     </h2>
-                    <p className="text-gray-500 mb-6 text-sm">Para começar, como ele(a) se chama?</p>
+                    <p className="text-gray-500 mb-8 font-medium text-sm">Digite o nome dele(a) para começar a missão.</p>
                     
-                    <input 
-                        type="text" 
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full text-2xl font-bold border-b-2 border-gray-200 focus:border-[#10B981] outline-none py-3 bg-transparent placeholder-gray-300 text-slate-800 transition-colors"
-                        placeholder="Digite o nome aqui..."
-                        autoFocus
-                    />
-                    
+                    <div className="relative">
+                        <input 
+                            type="text" 
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full text-3xl font-black border-b-4 border-gray-100 focus:border-[#10B981] outline-none py-4 bg-transparent placeholder-gray-200 text-slate-800 transition-colors uppercase tracking-tight"
+                            placeholder="NOME AQUI"
+                            autoFocus
+                        />
+                    </div>
+
                     {name && (
-                        <button onClick={handleNext} className="w-full mt-8 h-14 bg-[#10B981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-xl flex items-center justify-center gap-2 animate-in slide-in-from-bottom duration-300">
-                            COMEÇAR <Play size={20} fill="currentColor" />
+                        <button onClick={handleNext} className="w-full mt-8 h-16 bg-[#10B981] hover:bg-green-600 text-white rounded-2xl font-black text-xl shadow-xl shadow-green-200 flex items-center justify-center gap-2 animate-in slide-in-from-bottom duration-300">
+                            COMEÇAR AGORA <ArrowRight />
                         </button>
                     )}
                 </div>
             )}
 
-            {/* STEP 1: A DOR */}
+            {/* STEP 1: A DOR (COM EMOJIS) */}
             {step === 1 && (
                 <div className="animate-in slide-in-from-right duration-500">
                     <h2 className="text-2xl font-black text-slate-900 mb-4 leading-tight">O que mais te preocupa hoje?</h2>
@@ -177,90 +195,93 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                     <div className="space-y-3">
                         {[
                             { id: 'fingers', label: 'Ainda conta nos dedos', icon: '🖐️' },
-                            { id: 'anxiety', label: 'Trava ou fica nervoso(a)', icon: '😓' },
-                            { id: 'slow', label: 'Demora muito na tarefa', icon: '🐢' },
+                            { id: 'anxiety', label: 'Trava ou chora na tarefa', icon: '😢' },
+                            { id: 'slow', label: 'Demora muito para responder', icon: '🐢' },
                             { id: 'boring', label: 'Acha matemática chata', icon: '🥱' }
                         ].map((opt) => (
                             <button
                                 key={opt.id}
                                 onClick={() => { playSound('POP'); setPainPoint(opt.id); handleNext(); }}
-                                className="w-full p-4 rounded-xl border-2 border-gray-100 bg-white hover:border-[#10B981] hover:bg-green-50/50 shadow-sm flex items-center gap-4 transition-all transform active:scale-[0.98] text-left"
+                                className="w-full p-4 rounded-2xl border-2 border-gray-100 bg-white hover:border-[#10B981] hover:bg-green-50/30 shadow-sm flex items-center gap-4 transition-all transform active:scale-[0.98] text-left group"
                             >
-                                <span className="text-2xl">{opt.icon}</span>
-                                <span className="text-base font-bold text-slate-700">{opt.label}</span>
+                                <span className="text-3xl group-hover:scale-110 transition-transform">{opt.icon}</span>
+                                <span className="text-base font-bold text-slate-700 group-hover:text-slate-900">{opt.label}</span>
+                                <div className="ml-auto w-5 h-5 rounded-full border-2 border-gray-200 group-hover:border-[#10B981]"></div>
                             </button>
                         ))}
                     </div>
                 </div>
             )}
 
-            {/* STEP 2: O SONHO */}
+            {/* STEP 2: O SONHO (COM EMOJIS) */}
             {step === 2 && (
                 <div className="animate-in slide-in-from-right duration-500">
-                    <h2 className="text-2xl font-black text-slate-900 mb-4 leading-tight">Qual seria a maior vitória para o {name}?</h2>
+                    <h2 className="text-2xl font-black text-slate-900 mb-4 leading-tight">Imagine o {name} daqui a 30 dias...</h2>
                     
                     <div className="space-y-3">
                         {[
-                            { id: 'speed', label: 'Fazer contas de cabeça', icon: '⚡' },
-                            { id: 'confidence', label: 'Confiança na escola', icon: '🏆' },
-                            { id: 'grades', label: 'Notas melhores', icon: '📈' },
-                            { id: 'love', label: 'Gostar de estudar', icon: '❤️' }
+                            { id: 'speed', label: 'Fazendo contas de cabeça', icon: '⚡' },
+                            { id: 'confidence', label: 'Com confiança na escola', icon: '🏆' },
+                            { id: 'grades', label: 'Tirando notas melhores', icon: '📈' },
+                            { id: 'love', label: 'Gostando de estudar', icon: '❤️' }
                         ].map((opt) => (
                             <button
                                 key={opt.id}
                                 onClick={() => { playSound('POP'); setGoal(opt.id); handleNext(); }}
-                                className="w-full p-4 rounded-xl border-2 border-gray-100 bg-white hover:border-[#10B981] hover:bg-green-50/50 shadow-sm flex items-center gap-4 transition-all transform active:scale-[0.98] text-left"
+                                className="w-full p-4 rounded-2xl border-2 border-gray-100 bg-white hover:border-[#10B981] hover:bg-green-50/30 shadow-sm flex items-center gap-4 transition-all transform active:scale-[0.98] text-left group"
                             >
-                                <span className="text-2xl">{opt.icon}</span>
-                                <span className="text-base font-bold text-slate-700">{opt.label}</span>
+                                <span className="text-3xl group-hover:scale-110 transition-transform">{opt.icon}</span>
+                                <span className="text-base font-bold text-slate-700 group-hover:text-slate-900">{opt.label}</span>
+                                <div className="ml-auto w-5 h-5 rounded-full border-2 border-gray-200 group-hover:border-[#10B981]"></div>
                             </button>
                         ))}
                     </div>
                 </div>
             )}
 
-            {/* STEP 3: COMPROMISSO */}
+            {/* STEP 3: O ACORDO (Sem culpa para o pai) */}
             {step === 3 && (
                 <div className="animate-in slide-in-from-right duration-500">
                     <h2 className="text-2xl font-black text-slate-900 mb-4">Um acordo entre nós.</h2>
                     
-                    <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-r-xl mb-6">
+                    <div className="bg-blue-50 border-l-4 border-[#4F46E5] p-5 rounded-r-xl mb-6">
                         <p className="text-slate-800 font-medium text-sm leading-relaxed">
-                            O método funciona, mas exige constância. <br/>
-                            <strong>Você topa treinar 15 minutos por dia com o {name}?</strong>
+                            O método é 100% autônomo. Você <strong>não precisa ensinar</strong> nada. <br/><br/>
+                            Seu único trabalho é garantir que o {name} abra o aplicativo por <strong>15 minutos</strong>.
                         </p>
                     </div>
 
+                    <p className="text-slate-600 font-bold text-sm mb-4">Você topa esse desafio de supervisão?</p>
+
                     <button 
                         onClick={handleNext}
-                        className="w-full h-16 bg-[#10B981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-xl flex items-center justify-center gap-2 transform active:scale-[0.98] transition-all"
+                        className="w-full h-20 bg-[#10B981] hover:bg-green-600 text-white rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-2 transform active:scale-[0.98] transition-all text-center leading-tight px-4"
                     >
-                        <CheckCircle2 size={24} />
-                        SIM, ACEITAMOS
+                        <CheckCircle2 size={24} className="shrink-0" />
+                        SIM, EU GARANTO O ACESSO
                     </button>
-                    <p className="text-center text-gray-400 text-[10px] mt-3 font-bold uppercase">Sem compromisso financeiro agora</p>
                 </div>
             )}
 
-            {/* STEP 4: ANALISANDO */}
+            {/* STEP 4: ANALISANDO (A Espera) */}
             {step === 4 && (
-                <div className="text-center animate-in zoom-in duration-500 flex flex-col items-center justify-center h-full">
-                    <div className="w-20 h-20 relative mb-6">
+                <div className="text-center animate-in zoom-in duration-500 flex flex-col items-center justify-center h-full pb-20">
+                    <div className="w-24 h-24 relative mb-8">
                         <div className="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
                         <div className="absolute inset-0 border-4 border-[#10B981] rounded-full border-t-transparent animate-spin"></div>
                     </div>
-                    <h2 className="text-xl font-black text-slate-900 mb-2">Processando Perfil...</h2>
+                    <h2 className="text-xl font-black text-slate-900 mb-2">Gerando Plano Personalizado...</h2>
                     <div className="space-y-1 text-sm font-bold text-gray-400">
-                        <p className="animate-pulse">Criando plano para o {name}...</p>
-                        <p className="animate-pulse delay-75">Selecionando jogos...</p>
+                        <p className="animate-pulse">Analisando perfil do {name}...</p>
+                        <p className="animate-pulse delay-75">Adaptando dificuldade...</p>
                     </div>
                 </div>
             )}
 
-            {/* STEP 5: RESULTADO */}
+            {/* STEP 5: RESULTADO (Venda) */}
             {step === 5 && (
                 <div className="animate-in slide-in-from-bottom duration-500 flex flex-col h-full">
-                    <div className="flex-1 flex flex-col justify-center">
+                    <div className="flex-1 flex flex-col justify-center pb-20">
                         <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider w-fit mb-4">
                             <CheckCircle2 size={14} /> Diagnóstico Pronto
                         </div>
@@ -271,14 +292,19 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                         
                         <p className="text-slate-600 font-medium leading-relaxed text-base mb-6">
                             O {name} <strong>não</strong> tem problema com números. O método tradicional que é chato. <br/><br/>
-                            Nosso protocolo foi desenhado para resolver exatamente isso em <strong>15 minutos por dia</strong>.
+                            Nosso protocolo foi desenhado para resolver isso em <strong>15 minutos por dia</strong>.
                         </p>
+                        
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <p className="text-xs font-bold text-gray-400 uppercase mb-1">Recomendação:</p>
+                            <p className="text-[#4F46E5] font-black text-lg">Kit Titã (Acesso Vitalício)</p>
+                        </div>
                     </div>
 
-                    <div className="mt-auto pt-4 bg-white sticky bottom-0">
+                    <div className="mt-auto pt-4 bg-white sticky bottom-0 pb-6">
                         <button 
                             onClick={handleFinalAction}
-                            className="w-full h-16 bg-[#10B981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-xl flex items-center justify-center gap-2 animate-pulse"
+                            className="w-full h-20 bg-[#10B981] hover:bg-green-600 text-white rounded-2xl font-black text-xl shadow-xl shadow-green-200 flex items-center justify-center gap-3 animate-pulse"
                         >
                             VER PLANO DE RESGATE <ArrowRight size={24} />
                         </button>
