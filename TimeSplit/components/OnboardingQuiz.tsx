@@ -15,23 +15,23 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // --- IMAGENS ESTÁTICAS E REAIS (IDs Fixos) ---
+  // --- IMAGENS REAIS E CORRIGIDAS (Quiz 8.0) ---
   const stepImages = [
-    // 0: Identidade - Menino sorrindo segurando um troféu (Campeão Real)
-    "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=800&auto=format&fit=crop", 
-    // 1: Dor - Menina com a mão na cabeça, cansada na mesa (Dor Real)
-    "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?q=80&w=800&auto=format&fit=crop", 
-    // 2: Sonho - Menino levantando a mão na sala de aula (Sucesso/Confiança)
-    "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop", 
-    // 3: Compromisso - Mãos de adulto e criança (High Five/Toca Aqui)
-    "https://images.unsplash.com/photo-1531844251246-9f14745d2461?q=80&w=800&auto=format&fit=crop", 
-    // 4: [RESERVADO] - Será substituído por animação CSS (Sem imagem)
+    // 0: Identidade - Menino segurando Troféu Dourado (Foco no rosto e troféu)
+    "https://images.unsplash.com/photo-1531956666-cc73499e6501?q=80&w=800&auto=format&fit=crop", 
+    // 1: Dor - Menino de 8-10 anos com a mão na cabeça, triste com caderno (Dor Real)
+    "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop", 
+    // 2: Sonho - Menina pulando/celebrando com papel na mão (Vitória)
+    "https://images.unsplash.com/photo-1503919545874-84c105b79079?q=80&w=800&auto=format&fit=crop", 
+    // 3: Compromisso - Close nas mãos de Pai e Filho fazendo High-Five (Parceria)
+    "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=800&auto=format&fit=crop", 
+    // 4: [RESERVADO] - Animação CSS (Sem imagem)
     "", 
-    // 5: Sucesso - Pai levantando filho no ar/Abraço (Felicidade em Família)
-    "https://images.unsplash.com/photo-1609220136736-443140cffec6?q=80&w=800&auto=format&fit=crop"  
+    // 5: Sucesso - Pai levantando o filho e sorrindo (Conexão Familiar)
+    "https://images.unsplash.com/photo-1597524295328-98e3b3303498?q=80&w=800&auto=format&fit=crop"  
   ];
 
-  // --- SOM (Volume 0.5) ---
+  // --- SOM (Volume 0.5 - Alto e Claro) ---
   const playSound = (type: 'POP' | 'VICTORY') => {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
@@ -60,7 +60,6 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
     }
   };
 
-  // --- CONFETES ---
   const fireConfetti = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -126,7 +125,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
       <div className="relative w-full h-[25%] md:h-full md:w-1/2 bg-slate-900 overflow-hidden shrink-0">
         
         {step === 4 ? (
-            // ANIMAÇÃO DE CÓDIGO PURO PARA O STEP 4 (Sem imagem quebrada/robô)
+            // ANIMAÇÃO DE CÓDIGO PURO PARA O STEP 4
             <div className="absolute inset-0 flex items-center justify-center bg-indigo-900">
                 <div className="relative w-24 h-24">
                     <div className="absolute inset-0 border-4 border-indigo-400/30 rounded-full animate-ping"></div>
@@ -135,13 +134,13 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                 </div>
             </div>
         ) : (
-            // IMAGENS PARA OS OUTROS STEPS
+            // IMAGENS REAIS
             <>
-                <div className="absolute inset-0 bg-black/20 z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent z-10"></div>
                 <img 
                     src={stepImages[step]} 
                     alt="Quiz Context" 
-                    className="w-full h-full object-cover transition-all duration-700 transform scale-105 opacity-95 bg-slate-200"
+                    className="w-full h-full object-cover transition-all duration-700 transform scale-105"
                 />
             </>
         )}
@@ -166,12 +165,12 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
             {step === 0 && (
                 <div className="animate-in slide-in-from-right duration-500 pt-4">
                     <span className="text-[#4F46E5] font-black tracking-widest uppercase text-xs mb-2 block flex items-center gap-1">
-                        <Sparkles size={12} /> Identidade
+                        <Sparkles size={12} /> Perfil do Campeão
                     </span>
                     <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
                         Quem é o nosso futuro <span className="text-[#4F46E5]">Campeão?</span> 🏆
                     </h2>
-                    <p className="text-gray-500 mb-8 font-medium text-sm">Digite o nome dele(a) para começar a missão.</p>
+                    <p className="text-gray-500 mb-8 font-medium text-sm">Digite o nome dele(a) para começar.</p>
                     
                     <input 
                         type="text" 
@@ -239,7 +238,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                 </div>
             )}
 
-            {/* STEP 4: ANALISANDO (Sem Texto no Body, Foco na Animação) */}
+            {/* STEP 4: ANALISANDO */}
             {step === 4 && (
                 <div className="text-center animate-in zoom-in duration-500 flex flex-col items-center justify-center pt-10">
                     <h2 className="text-xl font-black text-slate-900 mb-2">Processando Perfil... 🧠</h2>
