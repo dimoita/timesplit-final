@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { X, ArrowRight, CheckCircle2, Sparkles, Brain } from 'lucide-react';
 
 interface OnboardingQuizProps {
   isOpen: boolean;
@@ -15,23 +15,23 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // --- IMAGENS CURADAS (CRIANÇAS REAIS & EMOÇÃO) ---
+  // --- IMAGENS ESTÁTICAS E REAIS (IDs Fixos) ---
   const stepImages = [
-    // 0: Identidade - Criança com Troféu (Campeão)
-    "https://images.unsplash.com/photo-1561525140-c2a4cc68e4bd?q=80&w=800&auto=format&fit=crop", 
-    // 1: Dor - Criança e Pai Frustrados com dever de casa
-    "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?q=80&w=800&auto=format&fit=crop", 
-    // 2: Sonho - Criança feliz segurando papel/atividade (Sucesso)
-    "https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=800&auto=format&fit=crop", 
-    // 3: Compromisso - Mãos Pai e Filho (Parceria/High Five)
-    "https://images.unsplash.com/photo-1628239026362-e64b7324d52b?q=80&w=800&auto=format&fit=crop", 
-    // 4: Análise - Tecnologia Abstrata (Luzes Neurais - Aprovado)
-    "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=800&auto=format&fit=crop", 
-    // 5: Sucesso - Pai e Filho comemorando/Abraço (Emoção Real)
-    "https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=800&auto=format&fit=crop"  
+    // 0: Identidade - Menino sorrindo segurando um troféu (Campeão Real)
+    "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=800&auto=format&fit=crop", 
+    // 1: Dor - Menina com a mão na cabeça, cansada na mesa (Dor Real)
+    "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?q=80&w=800&auto=format&fit=crop", 
+    // 2: Sonho - Menino levantando a mão na sala de aula (Sucesso/Confiança)
+    "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop", 
+    // 3: Compromisso - Mãos de adulto e criança (High Five/Toca Aqui)
+    "https://images.unsplash.com/photo-1531844251246-9f14745d2461?q=80&w=800&auto=format&fit=crop", 
+    // 4: [RESERVADO] - Será substituído por animação CSS (Sem imagem)
+    "", 
+    // 5: Sucesso - Pai levantando filho no ar/Abraço (Felicidade em Família)
+    "https://images.unsplash.com/photo-1609220136736-443140cffec6?q=80&w=800&auto=format&fit=crop"  
   ];
 
-  // --- SOM (Volume Ajustado 0.5) ---
+  // --- SOM (Volume 0.5) ---
   const playSound = (type: 'POP' | 'VICTORY') => {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
@@ -60,6 +60,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
     }
   };
 
+  // --- CONFETES ---
   const fireConfetti = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -123,12 +124,27 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
 
       {/* --- ÁREA DA IMAGEM HERO (25% Altura no Mobile) --- */}
       <div className="relative w-full h-[25%] md:h-full md:w-1/2 bg-slate-900 overflow-hidden shrink-0">
-        <div className="absolute inset-0 bg-black/20 z-10"></div>
-        <img 
-            src={stepImages[step]} 
-            alt="Step Context" 
-            className="w-full h-full object-cover transition-all duration-700 transform scale-105 opacity-95 bg-slate-200"
-        />
+        
+        {step === 4 ? (
+            // ANIMAÇÃO DE CÓDIGO PURO PARA O STEP 4 (Sem imagem quebrada/robô)
+            <div className="absolute inset-0 flex items-center justify-center bg-indigo-900">
+                <div className="relative w-24 h-24">
+                    <div className="absolute inset-0 border-4 border-indigo-400/30 rounded-full animate-ping"></div>
+                    <div className="absolute inset-0 border-4 border-white rounded-full border-t-transparent animate-spin"></div>
+                    <Brain className="absolute inset-0 m-auto text-white" size={32} />
+                </div>
+            </div>
+        ) : (
+            // IMAGENS PARA OS OUTROS STEPS
+            <>
+                <div className="absolute inset-0 bg-black/20 z-10"></div>
+                <img 
+                    src={stepImages[step]} 
+                    alt="Quiz Context" 
+                    className="w-full h-full object-cover transition-all duration-700 transform scale-105 opacity-95 bg-slate-200"
+                />
+            </>
+        )}
         
         <div className="absolute bottom-0 left-0 w-full px-4 pb-2 z-20 flex gap-1">
              {[0, 1, 2, 3, 4, 5].map(i => (
@@ -141,7 +157,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
         </button>
       </div>
 
-      {/* --- CONTEÚDO --- */}
+      {/* --- ÁREA DE CONTEÚDO --- */}
       <div className="flex-1 flex flex-col relative bg-white overflow-hidden">
         
         <div className="flex-1 overflow-y-auto px-6 py-6 pb-32">
@@ -150,12 +166,12 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
             {step === 0 && (
                 <div className="animate-in slide-in-from-right duration-500 pt-4">
                     <span className="text-[#4F46E5] font-black tracking-widest uppercase text-xs mb-2 block flex items-center gap-1">
-                        <Sparkles size={12} /> Perfil do Herói
+                        <Sparkles size={12} /> Identidade
                     </span>
                     <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
                         Quem é o nosso futuro <span className="text-[#4F46E5]">Campeão?</span> 🏆
                     </h2>
-                    <p className="text-gray-500 mb-8 font-medium text-sm">Digite o nome dele(a) para começar.</p>
+                    <p className="text-gray-500 mb-8 font-medium text-sm">Digite o nome dele(a) para começar a missão.</p>
                     
                     <input 
                         type="text" 
@@ -223,15 +239,11 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                 </div>
             )}
 
-            {/* STEP 4: ANALISANDO */}
+            {/* STEP 4: ANALISANDO (Sem Texto no Body, Foco na Animação) */}
             {step === 4 && (
                 <div className="text-center animate-in zoom-in duration-500 flex flex-col items-center justify-center pt-10">
-                    <div className="w-20 h-20 relative mb-6">
-                        <div className="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
-                        <div className="absolute inset-0 border-4 border-[#10B981] rounded-full border-t-transparent animate-spin"></div>
-                    </div>
                     <h2 className="text-xl font-black text-slate-900 mb-2">Processando Perfil... 🧠</h2>
-                    <p className="text-sm font-bold text-gray-400 animate-pulse">Criando plano para o {name}...</p>
+                    <p className="text-sm font-bold text-gray-400 animate-pulse">Criando plano personalizado para o {name}...</p>
                 </div>
             )}
 
