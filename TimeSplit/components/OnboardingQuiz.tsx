@@ -15,23 +15,23 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // --- IMAGENS DEFINITIVAS (EMOÇÃO REAL & LINKS ESTÁVEIS) ---
+  // --- IMAGENS CURADAS (CRIANÇAS REAIS & EMOÇÃO) ---
   const stepImages = [
-    // 0: Identidade - Criança Astronauta (Potencial)
-    "https://images.unsplash.com/photo-1541562232579-512a21360020?q=80&w=800&auto=format&fit=crop", 
-    // 1: Dor - Criança Frustrada/Cansada com tarefa
-    "https://images.unsplash.com/photo-1513542789411-b8a5d44d8436?q=80&w=800&auto=format&fit=crop", 
-    // 2: Sonho - Criança Feliz/Sorrindo (Sucesso)
-    "https://images.unsplash.com/photo-1503919545874-84c105b79079?q=80&w=800&auto=format&fit=crop", 
-    // 3: Compromisso - Mãos dadas/Parceria (Pai e Filho)
+    // 0: Identidade - Criança com Troféu (Campeão)
+    "https://images.unsplash.com/photo-1561525140-c2a4cc68e4bd?q=80&w=800&auto=format&fit=crop", 
+    // 1: Dor - Criança e Pai Frustrados com dever de casa
+    "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?q=80&w=800&auto=format&fit=crop", 
+    // 2: Sonho - Criança feliz segurando papel/atividade (Sucesso)
+    "https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=800&auto=format&fit=crop", 
+    // 3: Compromisso - Mãos Pai e Filho (Parceria/High Five)
     "https://images.unsplash.com/photo-1628239026362-e64b7324d52b?q=80&w=800&auto=format&fit=crop", 
-    // 4: Análise - Tecnologia Abstrata (Sem robôs)
-    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop", 
-    // 5: Sucesso - Criança Vibrando/Pulando
-    "https://images.unsplash.com/photo-1519834785169-98be25ec3f84?q=80&w=800&auto=format&fit=crop"  
+    // 4: Análise - Tecnologia Abstrata (Luzes Neurais - Aprovado)
+    "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=800&auto=format&fit=crop", 
+    // 5: Sucesso - Pai e Filho comemorando/Abraço (Emoção Real)
+    "https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=800&auto=format&fit=crop"  
   ];
 
-  // --- SOM ---
+  // --- SOM (Volume Ajustado 0.5) ---
   const playSound = (type: 'POP' | 'VICTORY') => {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
@@ -121,10 +121,9 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
       
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-[110]" />
 
-      {/* --- ÁREA DA IMAGEM HERO --- */}
+      {/* --- ÁREA DA IMAGEM HERO (25% Altura no Mobile) --- */}
       <div className="relative w-full h-[25%] md:h-full md:w-1/2 bg-slate-900 overflow-hidden shrink-0">
         <div className="absolute inset-0 bg-black/20 z-10"></div>
-        {/* Adicionei 'bg-slate-200' como placeholder enquanto carrega */}
         <img 
             src={stepImages[step]} 
             alt="Step Context" 
@@ -154,9 +153,9 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                         <Sparkles size={12} /> Perfil do Herói
                     </span>
                     <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
-                        Quem é o nosso futuro <span className="text-[#4F46E5]">Campeão?</span> 🚀
+                        Quem é o nosso futuro <span className="text-[#4F46E5]">Campeão?</span> 🏆
                     </h2>
-                    <p className="text-gray-500 mb-8 font-medium text-sm">Digite o nome dele(a) para começar a missão.</p>
+                    <p className="text-gray-500 mb-8 font-medium text-sm">Digite o nome dele(a) para começar.</p>
                     
                     <input 
                         type="text" 
@@ -213,6 +212,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
             {step === 3 && (
                 <div className="animate-in slide-in-from-right duration-500 pt-2">
                     <h2 className="text-2xl font-black text-slate-900 mb-4">Um acordo entre nós. 🤝</h2>
+                    
                     <div className="bg-blue-50 border-l-4 border-[#4F46E5] p-4 rounded-r-xl mb-4">
                         <p className="text-slate-800 font-medium text-sm leading-relaxed">
                             O método é autônomo. Você <strong>não precisa ensinar</strong> nada. <br/><br/>
@@ -241,19 +241,23 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                     <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider w-fit mb-4">
                         <CheckCircle2 size={14} /> Diagnóstico Pronto
                     </div>
+                    
                     <h2 className="text-2xl font-black text-slate-900 mb-3 leading-tight">
                         Temos a solução! 🎉
                     </h2>
+                    
                     <p className="text-slate-600 font-medium leading-relaxed text-sm mb-4">
                         O {name} <strong>não</strong> tem problema com números. O método tradicional que é chato. <br/><br/>
                         Nosso protocolo resolve isso em <strong>15 minutos por dia</strong>.
                     </p>
+                    
                     <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
                         <p className="text-xs font-bold text-gray-400 uppercase mb-1">Recomendação:</p>
                         <p className="text-[#4F46E5] font-black text-base">Kit Titã (Acesso Vitalício)</p>
                     </div>
                 </div>
             )}
+
         </div>
 
         {/* --- RODAPÉ FIXO --- */}
