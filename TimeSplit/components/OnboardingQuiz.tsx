@@ -15,17 +15,23 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // --- IMAGENS CURADAS (CRIANÇAS REAIS & EMOÇÃO) ---
+  // --- IMAGENS DEFINITIVAS (EMOÇÃO REAL & LINKS ESTÁVEIS) ---
   const stepImages = [
-    "https://images.unsplash.com/photo-1545558728-e5542d5e850f?q=80&w=800&auto=format&fit=crop", // 0: Menino Astronauta (Sonho/Potencial)
-    "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800&auto=format&fit=crop", // 1: Menina Estudando/Concentrada (Dor)
-    "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=800&auto=format&fit=crop", // 2: Criança Sorrindo na Escola (Sucesso)
-    "https://images.unsplash.com/photo-1606092195730-5d7b9af1ef4d?q=80&w=800&auto=format&fit=crop", // 3: Mãos Pai e Filho (Compromisso)
-    "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=800&auto=format&fit=crop", // 4: Neural Network Azul (Tecnologia Limpa)
-    "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=800&auto=format&fit=crop"  // 5: Confetes/Festa (Celebração)
+    // 0: Identidade - Criança Astronauta (Potencial)
+    "https://images.unsplash.com/photo-1541562232579-512a21360020?q=80&w=800&auto=format&fit=crop", 
+    // 1: Dor - Criança Frustrada/Cansada com tarefa
+    "https://images.unsplash.com/photo-1513542789411-b8a5d44d8436?q=80&w=800&auto=format&fit=crop", 
+    // 2: Sonho - Criança Feliz/Sorrindo (Sucesso)
+    "https://images.unsplash.com/photo-1503919545874-84c105b79079?q=80&w=800&auto=format&fit=crop", 
+    // 3: Compromisso - Mãos dadas/Parceria (Pai e Filho)
+    "https://images.unsplash.com/photo-1628239026362-e64b7324d52b?q=80&w=800&auto=format&fit=crop", 
+    // 4: Análise - Tecnologia Abstrata (Sem robôs)
+    "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop", 
+    // 5: Sucesso - Criança Vibrando/Pulando
+    "https://images.unsplash.com/photo-1519834785169-98be25ec3f84?q=80&w=800&auto=format&fit=crop"  
   ];
 
-  // --- SOM (Volume Ajustado) ---
+  // --- SOM ---
   const playSound = (type: 'POP' | 'VICTORY') => {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
@@ -37,7 +43,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
         osc.type = 'sine';
         osc.frequency.setValueAtTime(400, ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime); // Volume bom
+        gain.gain.setValueAtTime(0.5, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
         osc.connect(gain); gain.connect(ctx.destination);
         osc.start(); osc.stop(ctx.currentTime + 0.1);
@@ -111,37 +117,35 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
   if (!isOpen) return null;
 
   return (
-    // LAYOUT FIXO NA TELA (h-dvh impede rolagem da página inteira)
     <div className="fixed inset-0 z-[100] bg-white font-nunito animate-in fade-in duration-300 flex flex-col md:flex-row h-[100dvh] w-screen overflow-hidden">
       
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-[110]" />
 
-      {/* --- ÁREA DA IMAGEM HERO (25% Altura no Mobile) --- */}
+      {/* --- ÁREA DA IMAGEM HERO --- */}
       <div className="relative w-full h-[25%] md:h-full md:w-1/2 bg-slate-900 overflow-hidden shrink-0">
         <div className="absolute inset-0 bg-black/20 z-10"></div>
+        {/* Adicionei 'bg-slate-200' como placeholder enquanto carrega */}
         <img 
             src={stepImages[step]} 
             alt="Step Context" 
-            className="w-full h-full object-cover transition-all duration-700 transform scale-105 opacity-90"
+            className="w-full h-full object-cover transition-all duration-700 transform scale-105 opacity-95 bg-slate-200"
         />
         
-        {/* Barra de Progresso */}
         <div className="absolute bottom-0 left-0 w-full px-4 pb-2 z-20 flex gap-1">
              {[0, 1, 2, 3, 4, 5].map(i => (
-                <div key={i} className={`h-1 rounded-full transition-all duration-500 flex-1 ${i <= step ? 'bg-[#10B981]' : 'bg-white/30'}`} />
+                <div key={i} className={`h-1 rounded-full transition-all duration-500 flex-1 ${i <= step ? 'bg-[#10B981]' : 'bg-white/40'}`} />
             ))}
         </div>
 
-        {/* Botão Fechar */}
         <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-black/30 text-white p-2 rounded-full backdrop-blur-sm">
             <X size={20} />
         </button>
       </div>
 
-      {/* --- ÁREA DE CONTEÚDO (Scrollável no meio) --- */}
+      {/* --- CONTEÚDO --- */}
       <div className="flex-1 flex flex-col relative bg-white overflow-hidden">
         
-        <div className="flex-1 overflow-y-auto px-6 py-6 pb-32"> {/* pb-32 garante espaço pro botão fixo */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 pb-32">
             
             {/* STEP 0: NOME */}
             {step === 0 && (
@@ -158,7 +162,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                         type="text" 
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full text-3xl font-black border-b-4 border-gray-100 focus:border-[#10B981] outline-none py-2 bg-transparent placeholder-gray-200 text-slate-800 uppercase tracking-tight"
+                        className="w-full text-3xl font-black border-b-4 border-gray-100 focus:border-[#10B981] outline-none py-4 bg-transparent placeholder-gray-200 text-slate-800 transition-colors uppercase tracking-tight"
                         placeholder="NOME"
                         autoFocus
                     />
@@ -169,7 +173,6 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
             {step === 1 && (
                 <div className="animate-in slide-in-from-right duration-500 pt-2">
                     <h2 className="text-2xl font-black text-slate-900 mb-4 leading-tight">O que mais te preocupa hoje? 😟</h2>
-                    
                     <div className="space-y-3">
                         {[
                             { id: 'fingers', label: 'Ainda conta nos dedos', icon: '🖐️' },
@@ -177,13 +180,9 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                             { id: 'slow', label: 'Demora muito para responder', icon: '🐢' },
                             { id: 'boring', label: 'Acha matemática chata', icon: '🥱' }
                         ].map((opt) => (
-                            <button
-                                key={opt.id}
-                                onClick={() => { playSound('POP'); setPainPoint(opt.id); handleNext(); }}
-                                className="w-full p-4 rounded-xl border-2 border-gray-100 bg-white hover:border-[#10B981] hover:bg-green-50/30 shadow-sm flex items-center gap-3 transition-all active:scale-[0.98] text-left"
-                            >
-                                <span className="text-2xl">{opt.icon}</span>
-                                <span className="text-base font-bold text-slate-700">{opt.label}</span>
+                            <button key={opt.id} onClick={() => { playSound('POP'); setPainPoint(opt.id); handleNext(); }} className="w-full p-4 rounded-xl border-2 border-gray-100 bg-white hover:border-[#10B981] hover:bg-green-50/30 shadow-sm flex items-center gap-4 transition-all transform active:scale-[0.98] text-left group">
+                                <span className="text-3xl group-hover:scale-110 transition-transform">{opt.icon}</span>
+                                <span className="text-base font-bold text-slate-700 group-hover:text-slate-900">{opt.label}</span>
                             </button>
                         ))}
                     </div>
@@ -194,7 +193,6 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
             {step === 2 && (
                 <div className="animate-in slide-in-from-right duration-500 pt-2">
                     <h2 className="text-2xl font-black text-slate-900 mb-4 leading-tight">Qual seu sonho para o {name}? 🌟</h2>
-                    
                     <div className="space-y-3">
                         {[
                             { id: 'speed', label: 'Fazer contas de cabeça', icon: '⚡' },
@@ -202,13 +200,9 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                             { id: 'grades', label: 'Tirando notas melhores', icon: '📈' },
                             { id: 'love', label: 'Gostar de estudar', icon: '❤️' }
                         ].map((opt) => (
-                            <button
-                                key={opt.id}
-                                onClick={() => { playSound('POP'); setGoal(opt.id); handleNext(); }}
-                                className="w-full p-4 rounded-xl border-2 border-gray-100 bg-white hover:border-[#10B981] hover:bg-green-50/30 shadow-sm flex items-center gap-3 transition-all active:scale-[0.98] text-left"
-                            >
-                                <span className="text-2xl">{opt.icon}</span>
-                                <span className="text-base font-bold text-slate-700">{opt.label}</span>
+                            <button key={opt.id} onClick={() => { playSound('POP'); setGoal(opt.id); handleNext(); }} className="w-full p-4 rounded-xl border-2 border-gray-100 bg-white hover:border-[#10B981] hover:bg-green-50/30 shadow-sm flex items-center gap-4 transition-all transform active:scale-[0.98] text-left group">
+                                <span className="text-3xl group-hover:scale-110 transition-transform">{opt.icon}</span>
+                                <span className="text-base font-bold text-slate-700 group-hover:text-slate-900">{opt.label}</span>
                             </button>
                         ))}
                     </div>
@@ -219,10 +213,9 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
             {step === 3 && (
                 <div className="animate-in slide-in-from-right duration-500 pt-2">
                     <h2 className="text-2xl font-black text-slate-900 mb-4">Um acordo entre nós. 🤝</h2>
-                    
                     <div className="bg-blue-50 border-l-4 border-[#4F46E5] p-4 rounded-r-xl mb-4">
                         <p className="text-slate-800 font-medium text-sm leading-relaxed">
-                            O método é autônomo. Você <strong>não precisa ensinar</strong>. <br/><br/>
+                            O método é autônomo. Você <strong>não precisa ensinar</strong> nada. <br/><br/>
                             Seu trabalho é apenas garantir que o {name} abra o aplicativo por <strong>15 minutos</strong>.
                         </p>
                     </div>
@@ -248,60 +241,43 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                     <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider w-fit mb-4">
                         <CheckCircle2 size={14} /> Diagnóstico Pronto
                     </div>
-                    
                     <h2 className="text-2xl font-black text-slate-900 mb-3 leading-tight">
                         Temos a solução! 🎉
                     </h2>
-                    
                     <p className="text-slate-600 font-medium leading-relaxed text-sm mb-4">
                         O {name} <strong>não</strong> tem problema com números. O método tradicional que é chato. <br/><br/>
                         Nosso protocolo resolve isso em <strong>15 minutos por dia</strong>.
                     </p>
-                    
                     <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
                         <p className="text-xs font-bold text-gray-400 uppercase mb-1">Recomendação:</p>
                         <p className="text-[#4F46E5] font-black text-base">Kit Titã (Acesso Vitalício)</p>
                     </div>
                 </div>
             )}
-
         </div>
 
-        {/* --- RODAPÉ COM BOTÃO FIXO (Sempre Visível) --- */}
+        {/* --- RODAPÉ FIXO --- */}
         {step !== 1 && step !== 2 && step !== 4 && (
             <div className="absolute bottom-0 left-0 w-full p-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-30">
                 <div className="max-w-lg mx-auto">
                     {step === 0 && (
-                        <button 
-                            onClick={handleNext} 
-                            disabled={!name}
-                            className="w-full h-14 bg-[#10B981] hover:bg-green-600 disabled:opacity-50 text-white rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2 transition-all"
-                        >
+                        <button onClick={handleNext} disabled={!name} className="w-full h-14 bg-[#10B981] hover:bg-green-600 disabled:opacity-50 text-white rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2 transition-all">
                             CONTINUAR <ArrowRight size={20} />
                         </button>
                     )}
-                    
                     {step === 3 && (
-                        <button 
-                            onClick={handleNext} 
-                            className="w-full h-14 bg-[#10B981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2 transition-all"
-                        >
+                        <button onClick={handleNext} className="w-full h-14 bg-[#10B981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2 transition-all">
                             <CheckCircle2 size={20} /> SIM, EU GARANTO
                         </button>
                     )}
-
                     {step === 5 && (
-                        <button 
-                            onClick={handleFinalAction} 
-                            className="w-full h-14 bg-[#10B981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2 animate-pulse"
-                        >
+                        <button onClick={handleFinalAction} className="w-full h-14 bg-[#10B981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2 animate-pulse">
                             VER PLANO DE RESGATE <ArrowRight size={20} />
                         </button>
                     )}
                 </div>
             </div>
         )}
-
       </div>
     </div>
   );
