@@ -15,29 +15,129 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // --- SUAS IMAGENS SELECIONADAS (LINKS FIXOS) ---
+  // --- IMAGENS CURADAS (Quiz 9.0 - Correção Step 5) ---
   const stepImages = [
-    // 0: Identidade (Criança confiante/iluminada - Seu Link B)
-    "https://plus.unsplash.com/premium_photo-1713102866327-0bc631082dc6?q=80&w=869&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+    // 0: Identidade - Menino com Troféu (Mantido - Aprovado)
+    "https://images.unsplash.com/photo-1531956666-cc73499e6501?q=80&w=800&auto=format&fit=crop", 
     
-    // 1: Dor (Criança frustrada com a mão na testa - Seu Link A)
-    "https://images.unsplash.com/photo-1588660500261-47058e961fa6?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+    // 1: Dor - Menino frustrado (Mantido - Aprovado)
+    "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop", 
     
-    // 2: Sonho (Criança comemorando muito - Seu Link E)
-    "https://plus.unsplash.com/premium_photo-1661964297230-7bc0126c93a4?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+    // 2: Sonho - Menina pulando (Mantido - Aprovado)
+    "https://images.unsplash.com/photo-1503919545874-84c105b79079?q=80&w=800&auto=format&fit=crop", 
     
-    // 3: Compromisso (High Five Pai e Filho - Seu Link D)
-    "https://plus.unsplash.com/premium_photo-1663054417155-a9045f97950f?q=80&w=871&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+    // 3: Compromisso - High Five (Mantido - Aprovado)
+    "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=800&auto=format&fit=crop", 
     
-    // 4: [RESERVADO] - Animação CSS de Cérebro (Sem imagem para não ter risco)
+    // 4: [RESERVADO] - Animação CSS (Mantido - Aprovado)
     "", 
     
-    // 5: Sucesso (Pai com filho nos ombros - Seu Link A)
-    "https://images.unsplash.com/photo-1767600467465-1a47bda79f6e?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"  
+    // 5: Sucesso - NOVA FOTO (Pai e filho rindo abraçados na horizontal - Rosto garantido)
+    "https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?q=80&w=1000&auto=format&fit=crop"  
   ];
 
   // --- SOM ---
-  const playSound = (type: 'POP' | 'VICTORY') => {
+  const playSound = (type(Math.random() * colors.length)], size: Math.random() * 8 + 4, life: 100
+        });
+    }
+    const animate = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+        particles.forEach(p => {
+            if (p.life > 0) {
+                active = true;
+                p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life -= 1; p.size *= 0.96;
+                ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+            }
+        });
+        if (active) requestAnimationFrame(animate);
+    };
+    animate();
+  };
+
+  const handleNext = () => {
+    playSound('POP');
+    if (step === 3) setStep(4);
+    else setStep(step + 1);
+  };
+
+  useEffect(() => {
+      if (step === 4) {
+          setIsAnalyzing(true);
+          setTimeout(() => {
+              setIsAnalyzing(false);
+              setStep(5);
+              playSound('VICTORY');
+              fireConfetti();
+          }, 2500);
+      }
+  }, [step]);
+
+  const handleFinalAction = () => {
+      playSound('POP');
+      onComplete({ name, painPoint, goal });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-white font-nunito animate-in fade-in duration-300 flex flex-col md:flex-row h-[100dvh] w-screen overflow-hidden">
+      
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-[110]" />
+
+      {/* --- ÁREA DA IMAGEM HERO --- */}
+      <div className="relative w-full h-[25%] md:h-full md:w-1/2 bg-slate-900 overflow-hidden shrink-0">
+        
+        {step === 4 ? (
+            // ANIMAÇÃO DE CÓDIGO PURO
+            <div className="absolute inset-0 flex items-center justify-center bg-indigo-900">
+                <div className="relative w-24 h-24">
+                    <div className="absolute inset-0 border-4 border-indigo-400/30 rounded-full animate-ping"></div>
+                    <div className="absolute inset-0 border-4 border-white rounded-full border-t-transparent animate-spin"></div>
+                    <Brain className="absolute inset-0 m-auto text-white" size={32} />
+                </div>
+            </div>
+        ) : (
+            // IMAGENS
+            <>
+                <div className="absolute inset-0 bg-black/10 z-10"></div>
+                <img 
+                    src={stepImages[step]} 
+                    alt="Quiz Context" 
+                    className="w-full h-full object-cover transition-all duration-700 transform scale-105 opacity-95 bg-slate-200"
+                />
+            </>
+        )}
+        
+        <div className="absolute bottom-0 left-0 w-full px-4 pb-2 z-20 flex gap-1">
+             {[0, 1, 2, 3, 4, 5].map(i => (
+                <div key={i} className={`h-1 rounded-full transition-all duration-500 flex-1 ${i <= step ? 'bg-[#10B981]' : 'bg-white/40'}`} />
+            ))}
+        </div>
+
+        <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-black/30 text-white p-2 rounded-full backdrop-blur-sm">
+            <X size={20} />
+        </button>
+      </div>
+
+      {/* --- ÁREA DE CONTEÚDO --- */}
+      <div className="flex-1 flex flex-col relative bg-white overflow-hidden">
+        
+        <div className="flex-1 overflow-y-auto px-6 py-6 pb-32">
+            
+            {/* STEP 0: NOME */}
+            {step === 0 && (
+                <div className="animate-in slide-in-from-right duration-500 pt-4">
+                    <span className="text-[#4F46E5] font-black tracking-widest uppercase text-xs mb-2 block flex items-center gap-1">
+                        <Sparkles size={12} /> Perfil do Herói
+                    </span>
+                    <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
+                        Quem é o nosso futuro <span className="text-[#4F46E5]">Campeão?</span> 🏆
+                    </h2>
+                    <p className="text-gray-500 mb-8 font-medium text-sm">Digite o nome dele(a) para começar a missão.</p>
+                    
+                    <input 
+                        type="text: 'POP' | 'VICTORY') => {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
     const ctx = new AudioContext();
@@ -139,46 +239,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                 </div>
             </div>
         ) : (
-            // SUAS IMAGENS REAIS
-            <>
-                <div className="absolute inset-0 bg-black/10 z-10"></div>
-                <img 
-                    src={stepImages[step]} 
-                    alt="Quiz Context" 
-                    className="w-full h-full object-cover transition-all duration-700 transform scale-105"
-                />
-            </>
-        )}
-        
-        <div className="absolute bottom-0 left-0 w-full px-4 pb-2 z-20 flex gap-1">
-             {[0, 1, 2, 3, 4, 5].map(i => (
-                <div key={i} className={`h-1 rounded-full transition-all duration-500 flex-1 ${i <= step ? 'bg-[#10B981]' : 'bg-white/40'}`} />
-            ))}
-        </div>
-
-        <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-black/30 text-white p-2 rounded-full backdrop-blur-sm">
-            <X size={20} />
-        </button>
-      </div>
-
-      {/* --- ÁREA DE CONTEÚDO --- */}
-      <div className="flex-1 flex flex-col relative bg-white overflow-hidden">
-        
-        <div className="flex-1 overflow-y-auto px-6 py-6 pb-32">
-            
-            {/* STEP 0: NOME */}
-            {step === 0 && (
-                <div className="animate-in slide-in-from-right duration-500 pt-4">
-                    <span className="text-[#4F46E5] font-black tracking-widest uppercase text-xs mb-2 block flex items-center gap-1">
-                        <Sparkles size={12} /> Perfil do Herói
-                    </span>
-                    <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
-                        Quem é o nosso futuro <span className="text-[#4F46E5]">Campeão?</span> 🏆
-                    </h2>
-                    <p className="text-gray-500 mb-8 font-medium text-sm">Digite o nome dele(a) para começar.</p>
-                    
-                    <input 
-                        type="text" 
+            // IM" 
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="w-full text-3xl font-black border-b-4 border-gray-100 focus:border-[#10B981] outline-none py-4 bg-transparent placeholder-gray-200 text-slate-800 transition-colors uppercase tracking-tight"
@@ -232,7 +293,6 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
             {step === 3 && (
                 <div className="animate-in slide-in-from-right duration-500 pt-2">
                     <h2 className="text-2xl font-black text-slate-900 mb-4">Um acordo entre nós. 🤝</h2>
-                    
                     <div className="bg-blue-50 border-l-4 border-[#4F46E5] p-4 rounded-r-xl mb-4">
                         <p className="text-slate-800 font-medium text-sm leading-relaxed">
                             O método é autônomo. Você <strong>não precisa ensinar</strong> nada. <br/><br/>
@@ -254,7 +314,44 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
             {/* STEP 5: RESULTADO */}
             {step === 5 && (
                 <div className="animate-in slide-in-from-bottom duration-500 pt-2">
-                    <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider w-fit mb-4">
+                    <div className="inline-flex items-center gap-2 bg-green-100 text-green-7AGENS REAIS
+            <>
+                <div className="absolute inset-0 bg-black/10 z-10"></div>
+                <img 
+                    src={stepImages[step]} 
+                    alt="Quiz Context" 
+                    // AQUI ESTÁ O TRUQUE: 'object-center' garante que o centro da foto (rostos) apareça
+                    className={`w-full h-full object-cover transition-all duration-700 transform scale-105 opacity-95 bg-slate-200 object-center`}
+                />
+            </>
+        )}
+        
+        <div className="absolute bottom-0 left-0 w-full px-4 pb-2 z-20 flex gap-1">
+             {[0, 1, 2, 3, 4, 5].map(i => (
+                <div key={i} className={`h-1 rounded-full transition-all duration-500 flex-1 ${i <= step ? 'bg-[#10B981]' : 'bg-white/40'}`} />
+            ))}
+        </div>
+
+        <button onClick={onClose} className="absolute top-4 right-4 z-20 bg-black/30 text-white p-2 rounded-full backdrop-blur-sm">
+            <X size={20} />
+        </button>
+      </div>
+
+      {/* --- ÁREA DE CONTEÚDO --- */}
+      <div className="flex-1 flex flex-col relative bg-white overflow-hidden">
+        
+        <div className="flex-1 overflow-y-auto px-6 py-6 pb-32">
+            
+            {/* STEP 0: NOME */}
+            {step === 0 && (
+                <div className="animate-in slide-in-from-right duration-500 pt-4">
+                    <span className="text-[#4F46E5] font-black tracking-widest uppercase text-xs mb-2 block flex items-center gap-1">
+                        <Sparkles size={12} /> Perfil do Herói
+                    </span>
+                    <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
+                        Quem é o nosso futuro <span className="text-[#4F46E5]">Campeão?</span> 🏆
+                    </h2>
+                    <p className="text-gray-500 mb-8 font-medium text-sm">Digite o nome dele(a) para começar.</p00 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider w-fit mb-4">
                         <CheckCircle2 size={14} /> Diagnóstico Pronto
                     </div>
                     
@@ -291,12 +388,22 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                         </button>
                     )}
                     {step === 5 && (
-                        <button onClick={handleFinalAction} className="w-full h-14 bg-[#10B981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2 animate-pulse">
+                        <button onClick={handleFinalAction} className="w-full h-14 bg-[#10B>
+                    
+                    <input 
+                        type="text" 
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full text-3xl font-black border-b-4 border-gray-100 focus:border-[#10B981981] hover:bg-green-600 text-white rounded-xl font-black text-lg shadow-lg flex items-center justify-center gap-2 animate-pulse">
                             VER PLANO DE RESGATE <ArrowRight size={20} />
                         </button>
                     )}
                 </div>
-            </div>
+            ] outline-none py-4 bg-transparent placeholder-gray-200 text-slate-800 transition-colors uppercase tracking-tight"
+                        placeholder="NOME"
+                        autoFocus
+                    />
+                </div>
         )}
       </div>
     </div>
