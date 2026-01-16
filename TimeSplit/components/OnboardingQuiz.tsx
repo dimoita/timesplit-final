@@ -15,23 +15,28 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // --- IMAGENS REAIS E CORRIGIDAS (Quiz 8.0) ---
+  // --- SUAS IMAGENS SELECIONADAS (LINKS FIXOS) ---
   const stepImages = [
-    // 0: Identidade - Menino segurando Troféu Dourado (Foco no rosto e troféu)
-    "https://images.unsplash.com/photo-1531956666-cc73499e6501?q=80&w=800&auto=format&fit=crop", 
-    // 1: Dor - Menino de 8-10 anos com a mão na cabeça, triste com caderno (Dor Real)
-    "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop", 
-    // 2: Sonho - Menina pulando/celebrando com papel na mão (Vitória)
-    "https://images.unsplash.com/photo-1503919545874-84c105b79079?q=80&w=800&auto=format&fit=crop", 
-    // 3: Compromisso - Close nas mãos de Pai e Filho fazendo High-Five (Parceria)
-    "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=800&auto=format&fit=crop", 
-    // 4: [RESERVADO] - Animação CSS (Sem imagem)
+    // 0: Identidade (Criança confiante/iluminada - Seu Link B)
+    "https://plus.unsplash.com/premium_photo-1713102866327-0bc631082dc6?q=80&w=869&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+    
+    // 1: Dor (Criança frustrada com a mão na testa - Seu Link A)
+    "https://images.unsplash.com/photo-1588660500261-47058e961fa6?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+    
+    // 2: Sonho (Criança comemorando muito - Seu Link E)
+    "https://plus.unsplash.com/premium_photo-1661964297230-7bc0126c93a4?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+    
+    // 3: Compromisso (High Five Pai e Filho - Seu Link D)
+    "https://plus.unsplash.com/premium_photo-1663054417155-a9045f97950f?q=80&w=871&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", 
+    
+    // 4: [RESERVADO] - Animação CSS de Cérebro (Sem imagem para não ter risco)
     "", 
-    // 5: Sucesso - Pai levantando o filho e sorrindo (Conexão Familiar)
-    "https://images.unsplash.com/photo-1597524295328-98e3b3303498?q=80&w=800&auto=format&fit=crop"  
+    
+    // 5: Sucesso (Pai com filho nos ombros - Seu Link A)
+    "https://images.unsplash.com/photo-1767600467465-1a47bda79f6e?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"  
   ];
 
-  // --- SOM (Volume 0.5 - Alto e Claro) ---
+  // --- SOM ---
   const playSound = (type: 'POP' | 'VICTORY') => {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
@@ -134,9 +139,9 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
                 </div>
             </div>
         ) : (
-            // IMAGENS REAIS
+            // SUAS IMAGENS REAIS
             <>
-                <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent z-10"></div>
+                <div className="absolute inset-0 bg-black/10 z-10"></div>
                 <img 
                     src={stepImages[step]} 
                     alt="Quiz Context" 
@@ -165,7 +170,7 @@ export const OnboardingQuiz: React.FC<OnboardingQuizProps> = ({ isOpen, onClose,
             {step === 0 && (
                 <div className="animate-in slide-in-from-right duration-500 pt-4">
                     <span className="text-[#4F46E5] font-black tracking-widest uppercase text-xs mb-2 block flex items-center gap-1">
-                        <Sparkles size={12} /> Perfil do Campeão
+                        <Sparkles size={12} /> Perfil do Herói
                     </span>
                     <h2 className="text-3xl font-black text-slate-900 mb-2 leading-tight">
                         Quem é o nosso futuro <span className="text-[#4F46E5]">Campeão?</span> 🏆
