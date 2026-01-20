@@ -11,13 +11,16 @@ interface CheckoutBridgeProps {
   initialBump?: 'KIT' | 'INSURANCE' | null;
 }
 
-// --- LINKS DE PAGAMENTO (SUBSTITUA PELOS REAIS) ---
+// --- LINKS REAIS DO SEU PRODUTO (CONFIGURADOS) ---
 const LINKS = {
-    CORE_OFFER: 'https://pay.hotmart.com/SEU_CODIGO_CORE?checkoutMode=10', // $37
-    DOWNSELL_OFFER: 'https://pay.hotmart.com/SEU_CODIGO_BASIC?checkoutMode=10', // $19
+    // Oferta Principal ($37) com Order Bumps ativos
+    CORE_OFFER: 'https://pay.hotmart.com/L103952822R?checkoutMode=10', 
+    
+    // Oferta Secreta ($19) para recuperação
+    DOWNSELL_OFFER: 'https://pay.hotmart.com/L103952822R?off=m0rqvkv0&checkoutMode=10', 
 };
 
-// Helper de Rastreamento
+// Helper de Rastreamento (Pixel)
 const trackEvent = (eventName: string, params = {}) => {
     if ((window as any).fbq) {
         (window as any).fbq('track', eventName, params);
@@ -41,6 +44,7 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
   const [errorShake, setErrorShake] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
+  // States visuais dos Bumps (Apenas visual, pois a seleção real ocorre na Hotmart agora)
   const [isKitAccepted, setIsKitAccepted] = useState(false);
   const [isInsuranceAccepted, setIsInsuranceAccepted] = useState(false);
   const [nudgeActive, setNudgeActive] = useState(false); 
@@ -80,14 +84,18 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
       return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  // --- LÓGICA DE ABANDONO (FUNIL DE 3 PASSOS) ---
   const handleAttemptClose = () => {
       if (view === 'CHECKOUT') {
+          // Tentativa 1: Oferecer Downsell
           setView('DOWNSELL');
           trackEvent('ViewContent', { content_name: 'Downsell_Triggered' });
       } else if (view === 'DOWNSELL') {
+          // Tentativa 2: Oferecer Conta Free
           setView('FREE_SIGNUP');
           trackEvent('Lead', { content_name: 'Free_Offer_Triggered' });
       } else {
+          // Tentativa 3: Tchau
           onClose();
       }
   };
@@ -101,6 +109,7 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
       try {
           if (!supabase) throw new Error("Connection Error");
 
+          // 1. Criar Usuário
           const { data, error } = await supabase.auth.signUp({
               email,
               password,
@@ -111,6 +120,7 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
 
           if (error) throw error;
 
+          // 2. Criar Perfil Inicial
           if (data.user) {
              const newProfile = {
                 user_id: data.user.id,
@@ -156,8 +166,8 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
   };
 
   const handleRedeem = async () => {
-      // Simples validação de código para evitar erro de compilação se não tiver RPC
-      if (redeemCode === 'VIP2025') {
+      // Validação simples de código VIP
+      if (redeemCode === 'VIP2025' || redeemCode === 'FOUNDER') {
           onUpgrade?.();
           onClose();
       } else {
@@ -168,6 +178,7 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
 
   const handlePaymentClick = (isDownsell = false) => {
       if (!isDownsell && !isKitAccepted && !isInsuranceAccepted && !nudgeActive) {
+          // Pequeno empurrão visual se ele não marcou nada
           setNudgeActive(true);
           setTimeout(() => {
               proceedPayment(false);
@@ -192,7 +203,15 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
       
       try {
         const url = new URL(baseUrl);
-        if (childName) url.searchParams.append('name', childName);
+        
+        // Passa o nome da criança para o checkout da Hotmart (personalização)
+        if (childName && childName !== "Future Genius") {
+            url.searchParams.append('name', childName);
+            // Também tenta passar como parâmetro customizado caso configurado
+            url.searchParams.append('custom_child_name', childName);
+        }
+        
+        // Redireciona para a Hotmart
         window.location.href = url.toString();
       } catch (e) {
         console.error("Invalid URL configuration");
@@ -212,6 +231,7 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
         {/* Header Gradient */}
         <div className={`h-2 bg-gradient-to-r ${view === 'DOWNSELL' ? 'from-red-500 via-orange-500 to-red-500' : 'from-[#4F46E5] via-[#7C3AED] to-[#FF6B35]'}`}></div>
 
+        {/* BOTÃO X (Aciona o Funil de Abandono) */}
         <button 
             onClick={handleAttemptClose} 
             className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors z-20"
@@ -232,6 +252,7 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
              </div>
           </div>
         ) : view === 'CHECKOUT' ? (
+            /* --- TELA 1: OFERTA PRINCIPAL ($37) --- */
             <div className="flex flex-col h-full overflow-hidden">
              
              <div className="bg-red-50 border-b border-red-100 p-3 flex items-center justify-between gap-2 text-xs font-bold text-red-700 sticky top-0 z-10 shrink-0">
@@ -262,6 +283,7 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
                     </div>
                 </div>
 
+                {/* Stack de Preço */}
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-3">
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-600 font-bold flex items-center gap-2">Core App + Updates</span>
@@ -271,6 +293,27 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
                         </div>
                     </div>
                     
+                    {/* Visualização dos Bumps (Apenas visual aqui, a seleção real é na Hotmart) */}
+                    <div onClick={() => setIsKitAccepted(!isKitAccepted)} className={`mt-4 p-3 rounded-xl border-2 cursor-pointer transition-all flex gap-3 items-center ${isKitAccepted ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-gray-200'}`}>
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${isKitAccepted ? 'bg-indigo-500 border-indigo-500' : 'bg-white border-gray-300'}`}>
+                            {isKitAccepted && <Check size={14} className="text-white" />}
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-xs font-bold text-gray-900">Add Offline Kit (+$14)</p>
+                            <p className="text-[10px] text-gray-500">500+ printable activities.</p>
+                        </div>
+                    </div>
+
+                    <div onClick={() => setIsInsuranceAccepted(!isInsuranceAccepted)} className={`mt-2 p-3 rounded-xl border-2 cursor-pointer transition-all flex gap-3 items-center ${isInsuranceAccepted ? 'bg-emerald-50 border-emerald-500' : 'bg-white border-gray-200'}`}>
+                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${isInsuranceAccepted ? 'bg-emerald-500 border-emerald-500' : 'bg-white border-gray-300'}`}>
+                            {isInsuranceAccepted && <Check size={14} className="text-white" />}
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-xs font-bold text-gray-900">Add Data Insurance (+$5)</p>
+                            <p className="text-[10px] text-gray-500">Secure cloud backup.</p>
+                        </div>
+                    </div>
+
                     <div className="border-t border-dashed border-gray-300 my-2 pt-4 flex justify-between items-end">
                         <span className="text-gray-900 font-black uppercase text-xs tracking-wider">Total Due Today</span>
                         <div className="text-right flex items-center gap-2">
@@ -283,7 +326,7 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
                 </div>
 
                 <div className="space-y-4">
-                    {/* BOTÃO NATIVO - Substituindo o <Button> */}
+                    {/* BOTÃO PRINCIPAL (Vai para Hotmart) */}
                     <button 
                         onClick={() => handlePaymentClick(false)}
                         disabled={isRedirecting}
@@ -312,6 +355,7 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
              </div>
             </div>
         ) : view === 'DOWNSELL' ? (
+            /* --- TELA 2: DOWNSELL ($19) --- */
             <div className="p-8 text-center flex flex-col h-full animate-in slide-in-from-bottom duration-300">
                 <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
                     <AlertCircle size={40} className="text-red-600" />
@@ -324,13 +368,16 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
                 <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-4 mb-8 text-left relative overflow-hidden">
                     <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-bl-lg uppercase">Save 50%</div>
                     <h4 className="font-black text-slate-900 text-lg">Basic Plan</h4>
+                    <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                        <li className="flex items-center gap-1"><Check size={10}/> Game Access</li>
+                        <li className="flex items-center gap-1 text-red-400 line-through"><X size={10}/> No Offline Kit</li>
+                    </ul>
                     <div className="mt-4 flex items-baseline gap-2">
                         <span className="text-3xl font-black text-slate-900">$19</span>
                         <span className="text-sm text-gray-400 line-through">$37</span>
                     </div>
                 </div>
                 <div className="mt-auto space-y-3">
-                    {/* BOTÃO NATIVO */}
                     <button onClick={() => handlePaymentClick(true)} className="w-full h-14 bg-red-600 hover:bg-red-500 border-2 border-red-700 text-white rounded-xl font-black uppercase shadow-lg animate-pulse">
                         Yes, I want the $19 Deal
                     </button>
@@ -340,6 +387,7 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
                 </div>
             </div>
         ) : view === 'FREE_SIGNUP' ? (
+            /* --- TELA 3: CAPTURA FREE --- */
             <div className="p-8 text-center flex flex-col h-full animate-in slide-in-from-bottom duration-300">
                 <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Save size={40} className="text-[#4F46E5]" />
@@ -358,7 +406,6 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">Create Password</label>
                         <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-3 font-bold text-slate-900 focus:border-indigo-500 outline-none" />
                     </div>
-                    {/* BOTÃO NATIVO */}
                     <button type="submit" disabled={isCreatingAccount} className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 border-2 border-indigo-700 text-white rounded-xl font-black uppercase shadow-lg mt-4 flex items-center justify-center">
                         {isCreatingAccount ? <Loader2 className="animate-spin" /> : 'Save Progress & Start Free'}
                     </button>
@@ -368,6 +415,7 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
                 </button>
             </div>
         ) : (
+            /* --- TELA 4: RESGATE DE CÓDIGO (Para quem já comprou) --- */
             <div className="p-8 animate-in slide-in-from-right duration-300">
                 <div className="text-center mb-8">
                     <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-4 border-4 border-slate-700 shadow-xl">
@@ -380,7 +428,6 @@ export const CheckoutBridge: React.FC<CheckoutBridgeProps> = ({ isOpen, onClose,
                         <input type="text" value={redeemCode} onChange={(e) => setRedeemCode(e.target.value)} placeholder="XXXX-XXXX" className="w-full bg-slate-100 border-4 border-slate-200 rounded-xl p-4 text-center text-2xl font-black text-slate-800 tracking-widest uppercase placeholder:text-slate-300 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all" />
                         {isValidating && <div className="absolute right-4 top-1/2 -translate-y-1/2"><Loader2 className="animate-spin text-indigo-500" /></div>}
                     </div>
-                    {/* BOTÃO NATIVO */}
                     <button onClick={handleRedeem} disabled={!redeemCode || isValidating} className="w-full text-lg py-6 bg-slate-900 hover:bg-slate-800 border-4 border-slate-950 rounded-xl text-white font-black shadow-xl uppercase">
                         {isValidating ? 'Verifying...' : 'Unlock Full Access'}
                     </button>
