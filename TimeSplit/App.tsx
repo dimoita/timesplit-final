@@ -12,7 +12,6 @@ import { Pricing } from './components/Pricing';
 import { Footer } from './components/Footer';
 import { FAQ } from './components/FAQ';
 import { StickyCTA } from './components/StickyCTA';
-// IMPORTAÇÕES DIRETAS (SEM LAZY LOADING) PARA EVITAR ERRO DE INICIALIZAÇÃO
 import { LoginPage } from './components/LoginPage';
 import { OnboardingQuiz } from './components/OnboardingQuiz';
 import { CheckoutBridge } from './components/CheckoutBridge';
@@ -49,42 +48,11 @@ import { ToastSystem, ToastMessage, ToastType } from './components/ui/ToastSyste
 import { SquadronCenter } from './components/SquadronCenter';
 import { RealityCoupons, RealWorldItem } from './components/RealityCoupons';
 
-// --- TYPES ---
-export type MasteryMap = Record<string, number>;
-
-export interface Bounty {
-  id: string; title: string; goal: string; current: number; target: number; reward: number; type: 'CORRECT_ANSWERS' | 'STREAK' | 'LEVEL_COMPLETE';
-}
-
-export interface PetState {
-  stage: 'EGG' | 'PROTO' | 'SENTINEL' | 'GUARDIAN' | 'GALACTIC'; mood: 'IDLE' | 'HAPPY' | 'SAD' | 'EATING' | 'SLEEPING' | 'DANCING'; hunger: number; evolutionPoints: number; evolutionLevel: number; lastInteraction: number;
-}
-
-export interface HQState {
-  unlocked: string[]; layout: { view: string; floor: string; desk: string; decor: string; };
-}
-
-export interface Chronicle {
-  id: string; text: string; level: number; timestamp: string;
-}
-
-export interface ChronoEvent {
-  type: 'BLITZ' | 'GRAVITY_WELL' | 'SPLITZ_RAIN'; title: string; description: string; endsAt: number; multiplier: number;
-}
-
-export interface Profile {
-  id: string; name: string; avatar: string; villain: string;
-  progress: {
-    unlockedLevel: number; totalStars: number; coins: number; mastery: MasteryMap; consumables: Record<string, number>; upgrades: Record<string, number>; inventory: string[]; equippedItems: { avatar: string; trail: string; theme: string; }; bounties: Bounty[]; chronicles: Chronicle[]; pet: PetState; hq: HQState; unlockedArtifacts: string[]; equippedArtifact: string | null; lastDailyBriefing: string | null; referralCode?: string; redeemedCode?: boolean; recruitsCount?: number; realWorldInventory?: RealWorldItem[]; dailyLevelCount?: number; lastPlayedDate?: string;
-  };
-}
-
-const DEFAULT_PET: PetState = { stage: 'EGG', mood: 'IDLE', hunger: 50, evolutionPoints: 0, evolutionLevel: 1, lastInteraction: Date.now() };
-const DEFAULT_HQ: HQState = { unlocked: ['view_earth', 'floor_steel', 'desk_standard', 'decor_none'], layout: { view: 'view_earth', floor: 'floor_steel', desk: 'desk_standard', decor: 'decor_none' } };
-const STORAGE_KEY = 'timeSplit_profiles_v1';
-const DAILY_LEVEL_LIMIT = 3;
-
-const generateReferralCode = () => `AGENT-${Math.floor(100 + Math.random() * 900)}`;
+// --- IMPORTAÇÃO DO ARQUIVO NEUTRO (RESOLVE O ERRO 'UE') ---
+import { 
+  Profile, PetState, HQState, Chronicle, ChronoEvent, Bounty, MasteryMap,
+  DEFAULT_PET, DEFAULT_HQ, STORAGE_KEY, DAILY_LEVEL_LIMIT, generateReferralCode 
+} from './types';
 
 export default function App() {
   const [view, setView] = useState<'LANDING' | 'LOGIN' | 'PROFILES' | 'DASHBOARD' | 'GAME' | 'SHOP' | 'UPGRADES' | 'HALL' | 'GUARDIAN' | 'TITAN' | 'LEAGUE' | 'HQ' | 'CODEX' | 'PRINT' | 'DOJO' | 'ORBITAL' | 'QUANTUM' | 'DUEL' | 'LOGIC_ARENA' | 'TECH_DOJO' | 'SQUADRON' | 'INVENTORY'>('LANDING');
@@ -158,7 +126,6 @@ export default function App() {
 
   const getCurrentProfile = () => profiles.find(p => p.id === currentProfileId);
 
-  // --- RENDER (SEM SUSPENSE, DIRETO) ---
   if (view === 'LOGIN') {
       return <LoginPage onLoginSuccess={() => setView('PROFILES')} onBack={() => setView('LANDING')} />;
   }
@@ -205,7 +172,7 @@ export default function App() {
         <AlgebraExpansionModal isOpen={showAlgebraModal} onClose={() => setShowAlgebraModal(false)} onCheckout={() => { window.open('https://pay.hotmart.com/ALGEBRA_LINK'); setShowAlgebraModal(false); }} />
         {view === 'DASHBOARD' && ( <Dashboard childName={activeProfile.name} unlockedLevel={activeProfile.progress.unlockedLevel} totalStars={activeProfile.progress.totalStars} coins={activeProfile.progress.coins} equippedAvatar={activeProfile.progress.equippedItems.avatar === 'rocket' ? '🚀' : '🦸'} mastery={activeProfile.progress.mastery} consumables={activeProfile.progress.consumables} bounties={activeProfile.progress.bounties} petState={activeProfile.progress.pet} villain={activeProfile.villain} isPremium={isPremium} syncStatus={syncStatus} onStartSession={(l) => { setActiveLevelId(l); setView('GAME'); }} onSignOut={() => setView('PROFILES')} onOpenShop={() => setView('SHOP')} onOpenUpgrades={() => setView('UPGRADES')} onOpenDojo={() => setView('DOJO')} onOpenHallOfFame={() => setView('HALL')} onOpenSquadron={() => setView('SQUADRON')} onOpenInventory={() => setView('INVENTORY')} onOpenGuardian={() => setView('GUARDIAN')} onOpenTitan={() => setView('TITAN')} onOpenBase={() => setView('HQ')} onOpenPrintables={() => setView('PRINT')} onBuyConsumable={(id, cost) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins - cost, consumables: { ...p.progress.consumables, [id]: (p.progress.consumables[id] || 0) + 1 } } }))} onClaimBounty={(id) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins + 50, bounties: p.progress.bounties.filter(b => b.id !== id) } }), true)} onTriggerCheckout={() => { setCheckoutBump(null); setShowCheckout(true); }} activeEvent={activeEvent} onEventEnd={() => setActiveEvent(null)} onAddCoins={(amount) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins + amount } }), true)} dailyLevelCount={activeProfile.progress.dailyLevelCount || 0} /> )}
         {view === 'GAME' && ( <GameArena level={activeLevelId} childData={{ name: activeProfile.name, villain: activeProfile.villain, avatar: activeProfile.avatar }} mastery={activeProfile.progress.mastery} coins={activeProfile.progress.coins} consumables={activeProfile.progress.consumables} upgrades={activeProfile.progress.upgrades} petState={activeProfile.progress.pet} equippedArtifactId={activeProfile.progress.equippedArtifact} activeEvent={activeEvent} onExit={() => setView('DASHBOARD')} onComplete={handleGameComplete} onUpdateMastery={(updates) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, mastery: { ...p.progress.mastery, ...updates } } }))} onConsume={(id) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, consumables: { ...p.progress.consumables, [id]: Math.max(0, (p.progress.consumables[id] || 0) - 1) } } }))} onBuyConsumable={(id, cost) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins - cost, consumables: { ...p.progress.consumables, [id]: (p.progress.consumables[id] || 0) + 1 } } }))} referralCode={activeProfile.progress.referralCode} isZenMode={isZenMode} isHighContrast={isHighContrast} /> )}
-        {/* OUTRAS VIEWS */}
+        {/* RESTO DO CÓDIGO PERMANECE IGUAL, APENAS GARANTA QUE ESTÁ COPIANDO TUDO DA JANELA DE CÓDIGO */}
         {view === 'SHOP' && ( <Shop coins={activeProfile.progress.coins} inventory={activeProfile.progress.inventory} consumables={activeProfile.progress.consumables} equippedAvatarId={activeProfile.progress.equippedItems.avatar} equippedTrailId={activeProfile.progress.equippedItems.trail} equippedThemeId={activeProfile.progress.equippedItems.theme} onBack={() => setView('DASHBOARD')} onBuyItem={(item) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins - item.cost, inventory: [...p.progress.inventory, item.id] } }), true)} onBuyConsumable={(id, cost) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins - cost, consumables: { ...p.progress.consumables, [id]: (p.progress.consumables[id] || 0) + 1 } } }), true)} onEquip={(item) => updateCurrentProfile(p => { const type = item.type === 'TRAIL' ? 'trail' : item.type === 'THEME' ? 'theme' : 'avatar'; return { ...p, progress: { ...p.progress, equippedItems: { ...p.progress.equippedItems, [type]: item.id } } }; })} onForgeSpin={handleForgeSpin} onBuySupply={(item) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins - item.cost, realWorldInventory: [ ...(p.progress.realWorldInventory || []), { id: Date.now().toString(), itemId: item.id, name: item.name, cost: item.cost, purchasedAt: new Date().toISOString(), status: 'UNUSED' } ] } }), true)} /> )}
         {view === 'SQUADRON' && ( <SquadronCenter onBack={() => setView('DASHBOARD')} referralCode={activeProfile.progress.referralCode || 'AGENT-000'} recruitsCount={activeProfile.progress.recruitsCount || 0} onRedeemCode={handleRedeemCode} /> )}
         {view === 'INVENTORY' && ( <RealityCoupons onBack={() => setView('DASHBOARD')} inventory={activeProfile.progress.realWorldInventory || []} onConsume={(id) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, realWorldInventory: (p.progress.realWorldInventory || []).map(item => item.id === id ? { ...item, status: 'ACTIVE', activatedAt: new Date().toISOString() } : item) } }), true)} onFinish={(id) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, realWorldInventory: (p.progress.realWorldInventory || []).map(item => item.id === id ? { ...item, status: 'USED' } : item) } }), true)} /> )}
