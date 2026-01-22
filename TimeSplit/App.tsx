@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from './lib/supabaseClient';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -12,14 +12,18 @@ import { Pricing } from './components/Pricing';
 import { Footer } from './components/Footer';
 import { FAQ } from './components/FAQ';
 import { StickyCTA } from './components/StickyCTA';
-import { InstallMission } from './components/InstallMission';
-import { InstallPrompt } from './components/InstallPrompt';
+// IMPORTAÇÕES DIRETAS (SEM LAZY LOADING) PARA EVITAR ERRO DE INICIALIZAÇÃO
+import { LoginPage } from './components/LoginPage';
+import { OnboardingQuiz } from './components/OnboardingQuiz';
+import { CheckoutBridge } from './components/CheckoutBridge';
 import { Dashboard } from './components/Dashboard';
 import { GameArena, GameStats } from './components/GameArena';
 import { Shop, ShopItem } from './components/Shop';
 import { UpgradeGrid } from './components/UpgradeGrid';
 import { HallOfFame } from './components/HallOfFame';
 import { GuardianInterface } from './components/GuardianInterface';
+import { InstallMission } from './components/InstallMission';
+import { InstallPrompt } from './components/InstallPrompt';
 import { TitanArena } from './components/TitanArena';
 import { LeagueStandings } from './components/LeagueStandings';
 import { CosmicHQ } from './components/CosmicHQ';
@@ -44,12 +48,6 @@ import { ForgeResult } from './components/QuantumForge';
 import { ToastSystem, ToastMessage, ToastType } from './components/ui/ToastSystem';
 import { SquadronCenter } from './components/SquadronCenter';
 import { RealityCoupons, RealWorldItem } from './components/RealityCoupons';
-
-// --- LAZY LOADING (A Correção da Tela Branca) ---
-// Importamos esses componentes "depois" para evitar conflito de inicialização
-const LoginPage = React.lazy(() => import('./components/LoginPage').then(module => ({ default: module.LoginPage })));
-const OnboardingQuiz = React.lazy(() => import('./components/OnboardingQuiz').then(module => ({ default: module.OnboardingQuiz })));
-const CheckoutBridge = React.lazy(() => import('./components/CheckoutBridge').then(module => ({ default: module.CheckoutBridge })));
 
 // --- TYPES ---
 export type MasteryMap = Record<string, number>;
@@ -160,14 +158,9 @@ export default function App() {
 
   const getCurrentProfile = () => profiles.find(p => p.id === currentProfileId);
 
-  // --- RENDER ---
-  // Suspense envolve o componente Lazy para mostrar algo enquanto carrega
+  // --- RENDER (SEM SUSPENSE, DIRETO) ---
   if (view === 'LOGIN') {
-      return (
-          <Suspense fallback={<div className="h-screen w-full bg-[#0f172a]" />}>
-            <LoginPage onLoginSuccess={() => setView('PROFILES')} onBack={() => setView('LANDING')} />
-          </Suspense>
-      );
+      return <LoginPage onLoginSuccess={() => setView('PROFILES')} onBack={() => setView('LANDING')} />;
   }
 
   if (view === 'LANDING') {
@@ -185,10 +178,18 @@ export default function App() {
             <Footer />
             <StickyCTA onStartQuiz={() => setShowQuiz(true)} />
             
-            <Suspense fallback={null}>
-                <OnboardingQuiz isOpen={showQuiz} onClose={() => setShowQuiz(false)} onComplete={handleQuizComplete} />
-                <CheckoutBridge isOpen={showCheckout} onClose={() => setShowCheckout(false)} price={37} childName={activeProfile?.name || tempChildName} />
-            </Suspense>
+            <OnboardingQuiz 
+                isOpen={showQuiz} 
+                onClose={() => setShowQuiz(false)} 
+                onComplete={handleQuizComplete} 
+            />
+            
+            <CheckoutBridge 
+                isOpen={showCheckout} 
+                onClose={() => setShowCheckout(false)} 
+                price={37} 
+                childName={activeProfile?.name || tempChildName} 
+            />
           </>
       );
   }
@@ -201,10 +202,22 @@ export default function App() {
   return (
     <>
         <ToastSystem toasts={toasts} removeToast={removeToast} />
+        <AlgebraExpansionModal isOpen={showAlgebraModal} onClose={() => setShowAlgebraModal(false)} onCheckout={() => { window.open('https://pay.hotmart.com/ALGEBRA_LINK'); setShowAlgebraModal(false); }} />
         {view === 'DASHBOARD' && ( <Dashboard childName={activeProfile.name} unlockedLevel={activeProfile.progress.unlockedLevel} totalStars={activeProfile.progress.totalStars} coins={activeProfile.progress.coins} equippedAvatar={activeProfile.progress.equippedItems.avatar === 'rocket' ? '🚀' : '🦸'} mastery={activeProfile.progress.mastery} consumables={activeProfile.progress.consumables} bounties={activeProfile.progress.bounties} petState={activeProfile.progress.pet} villain={activeProfile.villain} isPremium={isPremium} syncStatus={syncStatus} onStartSession={(l) => { setActiveLevelId(l); setView('GAME'); }} onSignOut={() => setView('PROFILES')} onOpenShop={() => setView('SHOP')} onOpenUpgrades={() => setView('UPGRADES')} onOpenDojo={() => setView('DOJO')} onOpenHallOfFame={() => setView('HALL')} onOpenSquadron={() => setView('SQUADRON')} onOpenInventory={() => setView('INVENTORY')} onOpenGuardian={() => setView('GUARDIAN')} onOpenTitan={() => setView('TITAN')} onOpenBase={() => setView('HQ')} onOpenPrintables={() => setView('PRINT')} onBuyConsumable={(id, cost) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins - cost, consumables: { ...p.progress.consumables, [id]: (p.progress.consumables[id] || 0) + 1 } } }))} onClaimBounty={(id) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins + 50, bounties: p.progress.bounties.filter(b => b.id !== id) } }), true)} onTriggerCheckout={() => { setCheckoutBump(null); setShowCheckout(true); }} activeEvent={activeEvent} onEventEnd={() => setActiveEvent(null)} onAddCoins={(amount) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins + amount } }), true)} dailyLevelCount={activeProfile.progress.dailyLevelCount || 0} /> )}
         {view === 'GAME' && ( <GameArena level={activeLevelId} childData={{ name: activeProfile.name, villain: activeProfile.villain, avatar: activeProfile.avatar }} mastery={activeProfile.progress.mastery} coins={activeProfile.progress.coins} consumables={activeProfile.progress.consumables} upgrades={activeProfile.progress.upgrades} petState={activeProfile.progress.pet} equippedArtifactId={activeProfile.progress.equippedArtifact} activeEvent={activeEvent} onExit={() => setView('DASHBOARD')} onComplete={handleGameComplete} onUpdateMastery={(updates) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, mastery: { ...p.progress.mastery, ...updates } } }))} onConsume={(id) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, consumables: { ...p.progress.consumables, [id]: Math.max(0, (p.progress.consumables[id] || 0) - 1) } } }))} onBuyConsumable={(id, cost) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins - cost, consumables: { ...p.progress.consumables, [id]: (p.progress.consumables[id] || 0) + 1 } } }))} referralCode={activeProfile.progress.referralCode} isZenMode={isZenMode} isHighContrast={isHighContrast} /> )}
-        {/* Outras Views mantidas */}
+        {/* OUTRAS VIEWS */}
         {view === 'SHOP' && ( <Shop coins={activeProfile.progress.coins} inventory={activeProfile.progress.inventory} consumables={activeProfile.progress.consumables} equippedAvatarId={activeProfile.progress.equippedItems.avatar} equippedTrailId={activeProfile.progress.equippedItems.trail} equippedThemeId={activeProfile.progress.equippedItems.theme} onBack={() => setView('DASHBOARD')} onBuyItem={(item) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins - item.cost, inventory: [...p.progress.inventory, item.id] } }), true)} onBuyConsumable={(id, cost) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins - cost, consumables: { ...p.progress.consumables, [id]: (p.progress.consumables[id] || 0) + 1 } } }), true)} onEquip={(item) => updateCurrentProfile(p => { const type = item.type === 'TRAIL' ? 'trail' : item.type === 'THEME' ? 'theme' : 'avatar'; return { ...p, progress: { ...p.progress, equippedItems: { ...p.progress.equippedItems, [type]: item.id } } }; })} onForgeSpin={handleForgeSpin} onBuySupply={(item) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins - item.cost, realWorldInventory: [ ...(p.progress.realWorldInventory || []), { id: Date.now().toString(), itemId: item.id, name: item.name, cost: item.cost, purchasedAt: new Date().toISOString(), status: 'UNUSED' } ] } }), true)} /> )}
+        {view === 'SQUADRON' && ( <SquadronCenter onBack={() => setView('DASHBOARD')} referralCode={activeProfile.progress.referralCode || 'AGENT-000'} recruitsCount={activeProfile.progress.recruitsCount || 0} onRedeemCode={handleRedeemCode} /> )}
+        {view === 'INVENTORY' && ( <RealityCoupons onBack={() => setView('DASHBOARD')} inventory={activeProfile.progress.realWorldInventory || []} onConsume={(id) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, realWorldInventory: (p.progress.realWorldInventory || []).map(item => item.id === id ? { ...item, status: 'ACTIVE', activatedAt: new Date().toISOString() } : item) } }), true)} onFinish={(id) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, realWorldInventory: (p.progress.realWorldInventory || []).map(item => item.id === id ? { ...item, status: 'USED' } : item) } }), true)} /> )}
+        {view === 'HQ' && <CosmicHQ coins={activeProfile.progress.coins} setCoins={(amt) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: amt } }))} hqState={activeProfile.progress.hq} setHqState={(hq) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, hq } }), true)} petState={activeProfile.progress.pet} setPetState={(pet) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, pet } }), true)} mastery={activeProfile.progress.mastery} onBack={() => setView('DASHBOARD')} />}
+        {view === 'UPGRADES' && <UpgradeGrid upgrades={activeProfile.progress.upgrades} coins={activeProfile.progress.coins} onBack={() => setView('DASHBOARD')} onBuy={(id, cost) => updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins - cost, upgrades: { ...p.progress.upgrades, [id]: (p.progress.upgrades[id] || 0) + 1 } } }), true)} />}
+        {view === 'HALL' && <HallOfFame unlockedIds={[]} onBack={() => setView('DASHBOARD')} />}
+        {view === 'GUARDIAN' && ( <GuardianInterface onBack={() => setView('DASHBOARD')} mastery={activeProfile.progress.mastery} onResetProfile={() => { const resetP: Profile = { ...activeProfile, progress: { unlockedLevel: 1, totalStars: 0, coins: 0, mastery: {}, consumables: {}, upgrades: {}, inventory: ['rocket', 'trail_default', 'theme_default'], equippedItems: { avatar: 'rocket', trail: 'trail_default', theme: 'theme_default' }, bounties: [], chronicles: [], pet: DEFAULT_PET, hq: DEFAULT_HQ, unlockedArtifacts: [], equippedArtifact: null, lastDailyBriefing: null, referralCode: activeProfile.progress.referralCode, redeemedCode: activeProfile.progress.redeemedCode, recruitsCount: 0, realWorldInventory: [], dailyLevelCount: 0, lastPlayedDate: activeProfile.progress.lastPlayedDate } }; const updated = profiles.map(p => p.id === currentProfileId ? resetP : p); setProfiles(updated); persistData(updated, true); addToast("Perfil resetado com sucesso.", "WARNING"); }} isZenMode={isZenMode} onToggleZenMode={setIsZenMode} isHighContrast={isHighContrast} onToggleHighContrast={setIsHighContrast} childName={activeProfile.name} hasBackupInsurance={hasBackupInsurance} onForceBackup={() => persistData(profiles, true)} realWorldInventory={activeProfile.progress.realWorldInventory || []} isPremium={isPremium} hasOfflineKit={hasOfflineKit} onTriggerCheckout={() => { setCheckoutBump(null); setShowCheckout(true); }} onTriggerUpsell={() => { setCheckoutBump('KIT'); setShowCheckout(true); }} onApproveItem={handleApproveItem} onRefundItem={handleRefundItem} /> )}
+        {view === 'DOJO' && <TrainingDojo mastery={activeProfile.progress.mastery} onExit={() => setView('DASHBOARD')} onComplete={({coins}) => { updateCurrentProfile(p => ({...p, progress: {...p.progress, coins: p.progress.coins + coins}})); setView('DASHBOARD'); }} />}
+        {view === 'TITAN' && <TitanArena onExit={() => setView('DASHBOARD')} onComplete={(dmg) => { updateCurrentProfile(p => ({...p, progress: {...p.progress, coins: p.progress.coins + Math.floor(dmg/10)}})); setView('DASHBOARD'); }} username={activeProfile.name} />}
+        {view === 'PRINT' && <PrintableHQ unlockedLevel={activeProfile.progress.unlockedLevel} onBack={() => setView('DASHBOARD')} childName={activeProfile.name} hasOfflineKit={hasOfflineKit} onUnlock={() => { setCheckoutBump('KIT'); setShowCheckout(true); }} />}
+        {view === 'LOGIC_ARENA' && <LogicArena onExit={() => setView('DASHBOARD')} onComplete={(score) => { updateCurrentProfile(p => ({...p, progress: {...p.progress, coins: p.progress.coins + score}})); setView('DASHBOARD'); }} />}
+        {showDailyReward && <DailyRewardModal onClaim={(c, i) => { updateCurrentProfile(p => ({ ...p, progress: { ...p.progress, coins: p.progress.coins + c, consumables: { ...p.progress.consumables, [i]: (p.progress.consumables[i] || 0) + 1 } } }), true); setShowDailyReward(false); }} />}
         <CheckoutBridge isOpen={showCheckout} onClose={() => setShowCheckout(false)} price={37} childName={activeProfile?.name || tempChildName} initialBump={checkoutBump} />
     </>
   );
