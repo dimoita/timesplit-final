@@ -1,10 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
 
-const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+// Garante que o elemento root existe antes de renderizar
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+  throw new Error('Failed to find the root element');
+}
+
+const root = ReactDOM.createRoot(rootElement);
+
 root.render(
-  <div style={{ padding: 50, textAlign: 'center' }}>
-    <h1>TESTE DE VIDA</h1>
-    <p>Se você está lendo isso, a Vercel está funcionando.</p>
-  </div>
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 );
