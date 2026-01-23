@@ -15,38 +15,31 @@ import { StickyCTA } from './components/StickyCTA';
 import { OnboardingQuiz } from './components/OnboardingQuiz';
 import { LoginPage } from './components/LoginPage';
 import { CheckoutBridge } from './components/CheckoutBridge';
-import { ProfileSelector } from './components/ProfileSelector';
-import { PurchaseSuccessOverlay } from './components/PurchaseSuccessOverlay';
-import { AlgebraExpansionModal } from './components/upsell/LogicExpansionModal';
 import { ToastSystem, ToastMessage, ToastType } from './components/ui/ToastSystem';
 
-// Importação segura dos tipos
-import { Profile, PetState, HQState, Chronicle, ChronoEvent, Bounty, MasteryMap } from './types';
+// Definimos os tipos aqui dentro para evitar buscar em arquivos externos que podem estar travados
+interface Profile {
+  id: string;
+  name: string;
+}
 
 export default function App() {
-  // Simplificamos as Views para focar no fluxo de Vendas
-  const [view, setView] = useState<'LANDING' | 'LOGIN' | 'PROFILES' | 'DASHBOARD'>('LANDING');
-  
+  const [view, setView] = useState<'LANDING' | 'LOGIN'>('LANDING');
   const [user, setUser] = useState<any>(null);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
-  const [isPremium, setIsPremium] = useState(false);
-  
   const [showQuiz, setShowQuiz] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [showAlgebraModal, setShowAlgebraModal] = useState(false);
   const [checkoutBump, setCheckoutBump] = useState<'KIT' | 'INSURANCE' | null>(null);
   const [tempChildName, setTempChildName] = useState<string>('');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  // Helpers
+  // Sistema de Notificação Simples
   const addToast = (message: string, type: ToastType = 'INFO') => {
     const id = Date.now().toString();
     setToasts(prev => [...prev, { id, message, type }]);
   };
   const removeToast = (id: string) => setToasts(prev => prev.filter(t => t.id !== id));
 
-  // Init Auth
+  // Verifica Login (Apenas para saber se usuário existe)
   useEffect(() => {
     if (supabase) {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -59,49 +52,43 @@ export default function App() {
     }
   }, []);
 
-  // Handlers
+  // Quando o Quiz termina -> Abre o Checkout
   const handleQuizComplete = (data: { name: string; painPoint: string; goal: string }) => {
       setTempChildName(data.name);
       localStorage.setItem('ts_lead_data', JSON.stringify(data));
       setShowQuiz(false);
+      
+      // Pequeno delay para garantir a transição
       setTimeout(() => {
           setCheckoutBump(null);
           setShowCheckout(true);
       }, 300);
   };
 
-  const handleProfileSelect = (id: string) => {
-      setCurrentProfileId(id);
-      setView('DASHBOARD');
-  };
-
-  // --- RENDERIZAÇÃO SEGURA ---
-
+  // RENDERIZAÇÃO SIMPLIFICADA (SEM JOGO)
+  
   if (view === 'LOGIN') {
-      return <LoginPage onLoginSuccess={() => setView('PROFILES')} onBack={() => setView('LANDING')} />;
-  }
-
-  if (view === 'PROFILES') {
-      return <ProfileSelector profiles={profiles} onSelect={handleProfileSelect} onAddNew={() => {}} isPremium={isPremium} isFamilyPlan={false} />;
-  }
-
-  // Dashboard Temporário (Placeholder para testar se o login funciona)
-  if (view === 'DASHBOARD') {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white flex-col gap-4">
-            <h1 className="text-3xl font-bold">Acesso Liberado! 🚀</h1>
-            <p>O Login funcionou. Agora podemos religar o jogo.</p>
-            <button onClick={() => setView('LANDING')} className="px-4 py-2 bg-red-500 rounded">Sair</button>
-        </div>
+        <LoginPage 
+            onLoginSuccess={() => {
+                // Se logar, por enquanto mandamos para a Landing com um aviso,
+                // pois o Dashboard está desligado para manutenção.
+                setView('LANDING');
+                addToast("Login realizado! O acesso ao jogo será liberado em breve.", "SUCCESS");
+            }} 
+            onBack={() => setView('LANDING')} 
+        />
       );
   }
 
-  // VIEW 'LANDING' (O Principal)
+  // VIEW PADRÃO (LANDING PAGE)
   return (
       <>
         <ToastSystem toasts={toasts} removeToast={removeToast} />
         
         <Header onSignInClick={() => setView('LOGIN')} />
+        
+        {/* Bloco Principal de Vendas */}
         <Hero onStartQuiz={() => setShowQuiz(true)} />
         <MicroDojo />
         <Problem />
@@ -113,6 +100,7 @@ export default function App() {
         <Footer />
         <StickyCTA onStartQuiz={() => setShowQuiz(true)} />
         
+        {/* Funis de Conversão */}
         <OnboardingQuiz 
             isOpen={showQuiz} 
             onClose={() => setShowQuiz(false)} 
