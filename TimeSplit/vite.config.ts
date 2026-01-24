@@ -3,15 +3,19 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    // ESTA É A CORREÇÃO: Força todos a usarem a mesma versão do React
-    dedupe: ['react', 'react-dom'],
-  },
   build: {
-    target: 'es2022', // Atualizado para suportar React 19 corretamente
+    target: 'esnext',
     outDir: 'dist',
-    commonjsOptions: {
-      transformMixedEsModules: true,
+    // ESTA É A CORREÇÃO DO ERRO 'UE':
+    modulePreload: {
+      polyfill: false,
+    },
+    // Garante que o build não tente minificar nomes de variáveis críticas agora
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
     },
   },
   server: {
